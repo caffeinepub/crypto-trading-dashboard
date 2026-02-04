@@ -1,0 +1,66 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-04T20:45:33.737Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/src/components/Header.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css",
+          "frontend/src/components/Header.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/index.css",
+    "frontend/tailwind.config.js",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

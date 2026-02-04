@@ -1,0 +1,67 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-fix-all-dropdown-style-overlay-surfaces-dropdownmenu-select-popover-contextmenu-tooltip-so-the-opened-panel-is-never-transparent-see-through-and-the-menu-text-is-readable-in-both-light-and-dark-themes",
+      "featureTitle": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+      "files": [
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-resolve-the-theme-token-mismatch-causing-overlay-backgrounds-to-render-incorrectly-by-aligning-the-global-css-color-variables-with-the-format-expected-by-shadcn-radix-tailwind-utilities-so-classes-like-bg-popover-produce-correct-opaque-backgrounds",
+      "featureTitle": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+      "files": [
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-do-a-quick-ui-pass-on-the-dropdown-related-interactions-and-fix-any-obvious-issues-discovered-during-the-audit-e-g-overlay-z-index-stacking-so-menus-appear-above-sticky-headers-consistent-padding-radius-and-no-clipping-on-small-screens",
+      "featureTitle": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+      "files": [
+        "frontend/src/components/Header.tsx",
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

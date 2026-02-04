@@ -1,0 +1,72 @@
+{
+  "kind": "build_request",
+  "title": "Fix transparent dropdown/select menus and polish overlay readability",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "yes fix the dropdowns and anything else you see that could be fixed",
+          "the dropdown is transparent/see-through and it is hard to see the information"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Opening any dropdown/select/popover on desktop or mobile shows an opaque background (no page content visible through the panel).",
+        "Overlay panel text meets clear contrast in both light and dark mode.",
+        "Overlay panels include a visible border and shadow so edges are clearly defined on all backgrounds."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "the dropdown is transparent/see-through and it is hard to see the information"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Tailwind/Shadcn color utilities that rely on CSS variables (e.g., background/foreground/popover/card/border) render correctly without falling back to transparent.",
+        "The fix is applied globally (no need to patch individual dropdown instances one-by-one)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "anything else you see that could be fixed"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Dropdowns/Select menus are not clipped by containers and remain usable on small mobile screens.",
+        "Menus appear above sticky elements (e.g., the header) and remain clickable/tappable."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not edit any files under frontend/src/components/ui (compose/override via global styles or usage-level props instead).",
+    "Do not modify immutable paths listed in SYSTEM_CONTEXT."
+  ],
+  "nonGoals": [
+    "No new product features beyond UI/readability fixes for dropdowns and related overlays.",
+    "No backend changes are required for this request."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

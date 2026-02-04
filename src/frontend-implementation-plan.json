@@ -1,0 +1,63 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Fix opaque Radix/Shadcn overlays and global theme token alignment",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Ensure all dropdown-style overlay panels render with an opaque surface, readable text, and defined edges in light/dark themes.",
+      "acceptanceCriteria": [
+        "Opening any dropdown/select/popover on desktop or mobile shows an opaque background (no page content visible through the panel).",
+        "Overlay panel text meets clear contrast in both light and dark mode.",
+        "Overlay panels include a visible border and shadow so edges are clearly defined on all backgrounds."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Update global Radix/Shadcn overlay surface overrides to use the correct theme tokens and enforce opaque backgrounds, readable foreground colors, and clear border + shadow for overlay content elements (DropdownMenu, Select, Popover, ContextMenu, Tooltip). Use the shadcn-ui (Radix-based) overlay token conventions to keep surfaces consistent across components; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Fix global CSS theme token formatting so Tailwind/Shadcn utilities resolve overlay colors correctly (no transparent fallbacks).",
+      "acceptanceCriteria": [
+        "Tailwind/Shadcn color utilities that rely on CSS variables (e.g., background/foreground/popover/card/border) render correctly without falling back to transparent.",
+        "The fix is applied globally (no need to patch individual dropdown instances one-by-one)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Align the global CSS color variables to the format expected by the project Tailwind config (e.g., variables should be raw OKLCH channel values consumed by oklch(var(--token)) rather than embedding oklch(...) inside the variable). Ensure background/foreground/popover/card/border/input/ring tokens resolve to fully-opaque colors in both :root and .dark. This should globally fix shadcn-ui utility classes like bg-popover; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Audit and adjust Tailwind theme color token definitions as needed so they correctly consume the revised CSS variable formats (especially overlay-related tokens like popover/card/border/ring) and support explicit alpha handling where appropriate. Keep the solution global and consistent with shadcn-ui token usage; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Polish dropdown/overlay interaction behavior (stacking, spacing, and mobile usability) to avoid clipping and ensure overlays appear above sticky UI.",
+      "acceptanceCriteria": [
+        "Dropdowns/Select menus are not clipped by containers and remain usable on small mobile screens.",
+        "Menus appear above sticky elements (e.g., the header) and remain clickable/tappable."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Add global overlay interaction hardening for Radix/Shadcn popper/portal content: enforce a safe z-index above sticky header layers, ensure consistent padding/radius, and provide mobile-friendly max-height + scroll behavior for long menus/tooltips/popovers so they remain usable on small screens without being clipped. Keep changes as global style overrides (no edits under frontend/src/components/ui); verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Validate and, if necessary, adjust the sticky header stacking behavior so it does not incorrectly occlude Radix/Shadcn overlay content (e.g., ensure header z-index is compatible with the global overlay z-index strategy) while preserving the current sticky/backdrop styling."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-04T20:45:33.698Z",
+  "summary": "Diff updates global theme tokens to OKLCH channel values and Tailwind color mappings, and adds global Radix/Shadcn overlay CSS to force opaque backgrounds, readable foreground colors, borders, shadows, and higher z-index. Header z-index is reduced (z-40) to help overlays stack above sticky header.",
+  "missing_requirements": [
+    {
+      "id": "REQ-3",
+      "requirement": "Dropdowns/Select menus are not clipped by containers and remain usable on small mobile screens.",
+      "reason": "The diff clearly addresses stacking (z-index) but does not clearly show (in the provided/truncated snippets) any specific global rules for max-height/overflow/viewport collision handling that would prevent clipping on small screens.",
+      "evidence": [
+        "frontend/src/index.css (truncated)",
+        "frontend-file-summaries.txt (mentions max-heights/touch scrolling but not shown in diff content)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Global styling added for Dialog/Modal and Sheet overlay surfaces (background/border/shadow/z-index).",
+      "reason": "BuildRequest scope explicitly calls out dropdown-style overlays (DropdownMenu, Select, Popover, ContextMenu, Tooltip). Dialog/Sheet are not mentioned in REQ-1, and the diff adds explicit theming for them.",
+      "evidence": [
+        "frontend/src/index.css (selectors [data-radix-dialog-content], [data-radix-sheet-content])"
+      ]
+    }
+  ],
+  "confidence": 0.66,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/index.css",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}

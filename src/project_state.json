@@ -1,0 +1,348 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 12,
+  "summary": "A React/TypeScript crypto trading dashboard using a CORS-friendly live market data API (CoinRanking) focused on the Top-100 assets plus BTC/ETH/USDT dominance and a Total3 altcoin strength chart. It includes charts with historical data, AI-style price forecasting with verification/accuracy tracking, Smart Trade entry/exit (long + short) zones with projected/active levels and confidence scoring, Ready-to-Pump/Ready-to-Dump opportunity panels, alerts (toast/browser/sound) with cooldown/history, tracked-coins management, performance analytics (stage 1) with planned trend visuals, and a Settings & Strategy Control Center for strategy selection and tuning (thresholds/sensitivity/risk/performance). The app is mobile/PWA-installable and has ongoing UI polish to ensure readable modals/dropdowns and reliable interactivity.",
+  "existing_features": [
+    {
+      "id": "IF-1",
+      "title": "Top-100 market data ingestion with RSI/EMA indicators",
+      "synonyms": [
+        "CoinRanking integration",
+        "Market data fetch"
+      ],
+      "description": "Fetches Top 100 coins from CoinRanking, computes RSI(14) and EMA12/EMA26 crossover signal (Bullish/Bearish) from sparkline data, and provides cached results suitable for polling dashboards.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "Historical price fetching and synthetic timeframe generation",
+      "synonyms": [
+        "Coin history",
+        "Chart data loader"
+      ],
+      "description": "Fetches 24h/7d coin history from CoinRanking with caching and gracefully falls back to sparkline-based or synthetic history; additionally generates synthetic 1h/4h intraday series when API support is missing.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Market dominance and Total3 metrics",
+      "synonyms": [
+        "BTC/ETH/USDT dominance",
+        "Total3 chart"
+      ],
+      "description": "Computes BTC/ETH/USDT dominance and Total3 market cap (altcoins excluding BTC & ETH) and renders dominance cards and a distribution bar visualization.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "Mobile-optimized multi-tab dashboard",
+      "synonyms": [
+        "Dashboard layout",
+        "Responsive tabs"
+      ],
+      "description": "Provides a mobile-friendly tabbed dashboard (Overview/Portfolio/Analytics/Advanced/Settings) with sticky navigation, touch targets, responsive charts/tables, and a refresh workflow.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Smart Trade Confidence System (long/short) with projected zones",
+      "synonyms": [
+        "Trade entry/exit zones",
+        "Confidence model"
+      ],
+      "description": "Generates long entry/exit and short entry/cover-exit signals using RSI/EMA/MACD histogram plus momentum consistency, requires consecutive confirmations, emits projected (not-yet-active) setups with missing-condition explanations, and produces trade success probabilities and recommendations.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Trade zone visualization in charts, dialogs, and tables",
+      "synonyms": [
+        "Zone overlays",
+        "Coin detail analysis"
+      ],
+      "description": "Displays active/projected trade zones across the app: table badges, a detail dialog with zone cards, and a chart overlay (ReferenceArea) showing recommended price ranges and probability meters.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Pump/Dump opportunity scoring with AI-style commentary",
+      "synonyms": [
+        "ReadyToPump",
+        "ReadyToDump"
+      ],
+      "description": "Ranks coins by pump/dump potential using RSI/EMA and recent momentum, shows top opportunities as clickable cards, and generates heuristic “AI Analysis” commentary per coin.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "AI forecasting engine with sensitivity modes",
+      "synonyms": [
+        "Forecast engine",
+        "Multi-timeframe predictions"
+      ],
+      "description": "Generates 1h/4h/1d price movement forecasts from RSI/EMA/MACD/momentum signals with conservative/balanced/aggressive sensitivity multipliers and human-readable interpretations.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Forecast verification and accuracy analytics",
+      "synonyms": [
+        "Forecast accuracy chart",
+        "Verification tool"
+      ],
+      "description": "Tracks forecast verifications (predicted vs actual changes), computes accuracy summaries per timeframe, persists history in localStorage, and visualizes accuracy and predicted-vs-actual charts.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Alert system with preferences, cooldowns, history, and statistics",
+      "synonyms": [
+        "Browser notifications",
+        "Trade signal alerts"
+      ],
+      "description": "Implements configurable alerts for long/short signals (entry/exit/strongBuy/strongSell/shortEntry/coverExit) with thresholds, category toggles, cooldown enforcement, browser notifications, toast notifications, sound alerts, alert history and statistics, and CSV export.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Alert onboarding and toast UX",
+      "synonyms": [
+        "First-run guide",
+        "AlertToast"
+      ],
+      "description": "Provides a first-use onboarding dialog to request notification permission and enable defaults; renders animated toast alerts with dismiss/navigate actions and persistence of dismissal in history.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Signal sensitivity controls and opportunity filtering",
+      "synonyms": [
+        "Threshold slider",
+        "Aggressive/Balanced/Conservative"
+      ],
+      "description": "Allows users to tune a confidence threshold (50–90%) that filters trade-zone opportunities, provides presets, computes live opportunity counts, and tracks sensitivity performance over time in localStorage.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "High-performance mode optimization",
+      "synonyms": [
+        "PerformanceMode",
+        "Reduced motion"
+      ],
+      "description": "Toggles a performance mode that reduces animations via a CSS class and increases caching/reduces polling intervals; exposes helper functions for refresh interval and cache-time selection.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Tracked coins manager and tracked-only filtering",
+      "synonyms": [
+        "Watchlist",
+        "Coin tracking preferences"
+      ],
+      "description": "Lets users select which coins to track (bulk select top N, select all, deselect), persists preferences, and filters the dashboard to tracked-only coins when enabled.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Portfolio simulation with long/short positions and metrics",
+      "synonyms": [
+        "Paper trading",
+        "Virtual portfolio"
+      ],
+      "description": "Manages a virtual portfolio (capital, open/close positions, long/short PnL/ROI), updates prices from live data, persists active/closed positions, and computes portfolio-wide metrics and exposure.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "Risk management: dynamic stops/targets and portfolio heat",
+      "synonyms": [
+        "Position sizing",
+        "Risk metrics"
+      ],
+      "description": "Stores risk parameters and computes portfolio risk exposure (heat levels) plus dynamic stop-loss/take-profit and position sizing recommendations using ATR and support/resistance heuristics.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-17",
+      "title": "Historical backtesting engine and UI",
+      "synonyms": [
+        "Strategy backtesting",
+        "Equity curve"
+      ],
+      "description": "Runs strategy simulations on historical series, computes win rate/avg gain/loss/drawdown/Sharpe/total return, stores results, and visualizes equity curve and recent trades.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-18",
+      "title": "Trade journal analytics with position synchronization",
+      "synonyms": [
+        "Journal entries",
+        "Performance correlation"
+      ],
+      "description": "Persists journal entries, links entries to alerts/positions, auto-updates outcomes when simulated positions close, and computes analytics (win rate, confidence correlation, trends, accuracy by confidence band) with chart visualizations.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-19",
+      "title": "Whale activity detection and smart money tracker panel",
+      "synonyms": [
+        "Whale tracker",
+        "Accumulation/distribution"
+      ],
+      "description": "Detects and stores whale “movements” from heuristic signals, aggregates recent activity into accumulation/distribution scores, and displays top symbols with net-flow and trend summaries.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-20",
+      "title": "BTC correlation matrix, divergences, and rotation signals",
+      "synonyms": [
+        "Correlation heatmap",
+        "Rotation opportunities"
+      ],
+      "description": "Computes Pearson correlations between BTC and altcoins from sparkline data, flags divergence/convergence, generates rotation buy/sell signals, and renders a correlation/rotation UI panel.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-21",
+      "title": "Profit zone analysis with support/resistance and ROI probabilities",
+      "synonyms": [
+        "Profit opportunities",
+        "Pivot levels"
+      ],
+      "description": "Derives pivot-based support/resistance, ROI probabilities across horizons, expected profit ranges, risk/reward ratios, and success probability; ranks and displays top opportunities.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-22",
+      "title": "AI trade prediction optimizer with threshold suggestions",
+      "synonyms": [
+        "Outcome tracking",
+        "Adaptive tuning"
+      ],
+      "description": "Tracks signal outcomes, computes optimizer metrics (accuracy/score), produces learning insights, and suggests threshold adjustments per signal type based on observed performance.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-23",
+      "title": "Internet Identity authentication and ICP actor lifecycle",
+      "synonyms": [
+        "DFINITY AuthClient",
+        "Actor hook"
+      ],
+      "description": "Provides an InternetIdentityProvider, manages login/logout, creates an authenticated backend actor (or anonymous actor), bootstraps access control via a secret token, and refreshes dependent queries when identity changes.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-24",
+      "title": "Motoko backend canister: access control + CRUD + settings",
+      "synonyms": [
+        "ICP backend",
+        "Canister services"
+      ],
+      "description": "Implements access control (admin/user/guest) and user-owned CRUD for positions, strategies, backtests, and trade journal entries; stores user profiles and per-user settings with defaults; supports Ready-to-Dump signals (admin-managed) and provides an HTTP outcall to Binance 24hr ticker endpoint.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-25",
+      "title": "PWA support (service worker, manifest, and install help UI)",
+      "synonyms": [
+        "Progressive Web App",
+        "Offline-capable shell",
+        "Install prompt/help"
+      ],
+      "description": "Adds PWA assets including a web app manifest and service worker, plus a frontend install/help component to guide users through installing the dashboard as a PWA.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-all-dropdown-style-overlay-surfaces-dropdownmenu-select-popover-contextmenu-tooltip-so-the-opened-panel-is-never-transparent-see-through-and-the-menu-text-is-readable-in-both-light-and-dark-themes",
+      "title": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-resolve-the-theme-token-mismatch-causing-overlay-backgrounds-to-render-incorrectly-by-aligning-the-global-css-color-variables-with-the-format-expected-by-shadcn-radix-tailwind-utilities-so-classes-like-bg-popover-produce-correct-opaque-backgrounds",
+      "title": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-do-a-quick-ui-pass-on-the-dropdown-related-interactions-and-fix-any-obvious-issues-discovered-during-the-audit-e-g-overlay-z-index-stacking-so-menus-appear-above-sticky-headers-consistent-padding-radius-and-no-clipping-on-small-screens",
+      "title": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Provide mobile app experience: clear instructions for installing the web app on iOS/Android (Add to Home Screen/PWA) and optionally package as a native wrapper (Capacitor) if needed",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Fix dropdown menus globally to use solid, non-transparent backgrounds with proper contrast/borders so dropdown content is readable (including mobile).",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "architectural_notes": [
+    "Frontend is a modular React SPA using hooks and feature-focused libraries under src/lib (tradeEntryZone, forecastEngine, alertSystem, portfolioSimulation, riskManagement, backtesting, etc.).",
+    "@tanstack/react-query is used for caching/polling of market data and for ICP backend calls; query invalidation is triggered when the authenticated actor changes.",
+    "UI is built with TailwindCSS + shadcn/ui component primitives; Recharts is used for charts/visualizations; lucide-react provides icons.",
+    "A large portion of analytics state is persisted client-side via localStorage (alerts, forecast history/verifications, sensitivity settings, backtests, portfolio simulation, trade journal entries, whale tracker history, AI optimizer outcomes, tracked coins).",
+    "Smart Trade Confidence System computes signals from RSI/EMA/MACD histogram plus a momentum consistency metric; it requires consecutive confirmations and also emits “projected” (pre-confirmation) zones with human-readable reasons.",
+    "ICP backend (Motoko) uses in-canister Map storage for entities; access control is factored into a reusable mixin (MixinAuthorization) and shared guard functions enforce user/admin/ownership checks on most mutating operations.",
+    "Backend supports IC HTTP outcalls (ic:aaaaa-aa http_request) with a transform function that strips headers; includes a Binance 24hr ticker outcall helper.",
+    "Authentication uses Internet Identity (AuthClient) and an “actor” factory; admin bootstrap uses an environment token (CAFFEINE_ADMIN_TOKEN) compared against a secret passed from the frontend via URL-hash/session storage utilities.",
+    "Repository now includes a reusable ICP + React build-template (pnpm workspace, Dockerfile, deploy scripts, canister yaml, system IDL) for standardized builds/deployments.",
+    "Frontend build/lint infrastructure adds custom ESLint rules to enforce wrapping in InternetIdentityProvider and to avoid BigInt usage in React Query keys (to prevent serialization/cache issues)."
+  ],
+  "known_issues": [
+    "CSS duplication/conflict risk: both frontend/src/index.css and frontend/index.css exist with overlapping CSS variable definitions; depending on build tooling/imports this can cause inconsistent theming.",
+    "Backtesting engine constructs synthetic CryptoData with fixed RSI=50 and EMA='Bullish' and percentChange=0 for each bar; as written, the RSI strategy will never enter/exit and results are not realistic without feeding computed indicators from history.",
+    "Whale tracker heuristics are simplistic and appear to conflate price percent change with volume change (uses percentChange as volumeChange proxy); resulting ‘whale’ detections are likely inaccurate.",
+    "Backend exposes several broad query endpoints without guards (e.g., getAllPositions/getAllStrategies/getAllBacktests and getAllReadyToDumpSignals). This can leak other users’ data to any caller depending on canister deployment expectations.",
+    "AccessControl.getUserRole traps for a registered-but-uninitialized principal; if a frontend client fails to call _initializeAccessControlWithSecret before guarded calls, users may encounter “User is not registered” traps.",
+    "Extensive console logging throughout analytics and data-fetch paths may impact performance and potentially expose sensitive operational details in production logs.",
+    "CoinChart generates synthetic 1h/4h data because the API lacks those granularities; this reduces analytical fidelity and can mislead users if presented as real market history.",
+    "Dropdown menus are still transparent/see-through in some places, making text hard to read; needs a global styling fix across all dropdown components."
+  ],
+  "isFixRequest": true,
+  "gameProjectType": "none",
+  "projectName": "Crypto Trading Dashboard",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
