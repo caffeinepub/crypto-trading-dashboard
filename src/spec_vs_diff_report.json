@@ -1,33 +1,89 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-04T20:45:33.698Z",
-  "summary": "Diff updates global theme tokens to OKLCH channel values and Tailwind color mappings, and adds global Radix/Shadcn overlay CSS to force opaque backgrounds, readable foreground colors, borders, shadows, and higher z-index. Header z-index is reduced (z-40) to help overlays stack above sticky header.",
+  "generatedAt": "2026-02-08T03:57:58.728Z",
+  "summary": "Core Rotation Radar UI (dashboard, buckets/metrics, phase panel, leaders view), rebrand, theming, and a help/guide dialog were added. However, rotation alerts are largely UI-only with placeholder history and no evidence of actual alert evaluation/toast delivery/cooldowns. Persistence via backend settings appears incomplete/uncertain from the diff (frontend calls new backend methods not shown), and some production-polish items (notably noisy console logs) are not addressed.",
   "missing_requirements": [
     {
-      "id": "REQ-3",
-      "requirement": "Dropdowns/Select menus are not clipped by containers and remain usable on small mobile screens.",
-      "reason": "The diff clearly addresses stacking (z-index) but does not clearly show (in the provided/truncated snippets) any specific global rules for max-height/overflow/viewport collision handling that would prevent clipping on small screens.",
+      "id": "REQ-5",
+      "requirement": "Flow & Leaders should surface: (a) leaders/laggards within each bucket, (b) coins outperforming their bucket and BTC, and (c) divergence highlights using existing correlation analysis utilities.",
+      "reason": "The view includes leaders/laggards and sorting vs BTC and by correlation magnitude, but the diff does not show any computation/UI for 'outperforming their bucket' (relative to bucket aggregate) nor explicit divergence/rotation-signal labeling from the correlation utilities; it only computes a raw correlation number and sorts by absolute correlation.",
       "evidence": [
-        "frontend/src/index.css (truncated)",
-        "frontend-file-summaries.txt (mentions max-heights/touch scrolling but not shown in diff content)"
+        "frontend/src/components/rotation/FlowLeadersView.tsx",
+        "frontend/src/lib/correlationAnalysis.ts"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Add Rotation Alerts with configurable rules (phase change, bucket leadership shift, divergence/rotation-signal alerts), toast delivery via existing notification infrastructure, in-app alert history, and cooldowns.",
+      "reason": "Settings UI exists, but alert history is explicitly a placeholder with an empty array; no rule evaluation, no toast emission for rotation events, and no cooldown logic is evidenced in the diff summary.",
+      "evidence": [
+        "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+        "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Persist user Rotation Radar preferences using authenticated backend storage (and keep app functional when logged out with local defaults).",
+      "reason": "Frontend hook calls backend methods (getUserRotationRadarSettings/saveUserRotationRadarSettings/resetUserRotationRadarSettings), but the diff summary for backend/main.mo does not show these APIs being implemented. Also, unauthenticated persistence appears incomplete because the hook writes to localStorage but does not read from localStorage when actor is null (it returns DEFAULT_SETTINGS).",
+      "evidence": [
+        "frontend/src/hooks/useRotationRadarSettings.ts",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Reduce console noise (remove or gate excessive logs) and ensure production polish across rotation panels.",
+      "reason": "There are explicit console logs in App.tsx for navigation and tracking changes; while a debug helper was added, the shown logs are not gated behind it in the diff summary.",
+      "evidence": [
+        "frontend/src/App.tsx",
+        "frontend/src/lib/debug.ts"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Global styling added for Dialog/Modal and Sheet overlay surfaces (background/border/shadow/z-index).",
-      "reason": "BuildRequest scope explicitly calls out dropdown-style overlays (DropdownMenu, Select, Popover, ContextMenu, Tooltip). Dialog/Sheet are not mentioned in REQ-1, and the diff adds explicit theming for them.",
+      "description": "Footer attribution/link to caffeine.ai and 'Built with' messaging.",
+      "reason": "Not requested in the BuildRequest requirements or acceptance criteria; introduces new external branding/link in user-facing UI.",
       "evidence": [
-        "frontend/src/index.css (selectors [data-radix-dialog-content], [data-radix-sheet-content])"
+        "frontend/src/components/Footer.tsx"
+      ]
+    },
+    {
+      "description": "Rotation alerts settings framed as 'Push Notifications'.",
+      "reason": "REQ-6 calls for delivery via existing notification/toast infrastructure and explicitly lists no push notifications/websockets as non-goals; adding a 'Push Notifications' setting suggests an unrequested/possibly conflicting delivery mechanism (even if only a label).",
+      "evidence": [
+        "frontend/src/components/rotation/RotationAlertsPanel.tsx"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.74,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
+    "frontend/index.html",
+    "frontend/public/manifest.webmanifest",
+    "frontend/public/sw.js",
+    "frontend/src/App.tsx",
+    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
+    "frontend/src/components/LoginButton.tsx",
+    "frontend/src/components/SettingsControlCenter.tsx",
+    "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+    "frontend/src/components/rotation/FlowLeadersView.tsx",
+    "frontend/src/components/rotation/HowToUseRotationRadarDialog.tsx",
+    "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx",
+    "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+    "frontend/src/components/rotation/RotationPhasePanel.tsx",
+    "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+    "frontend/src/hooks/useRotationRadarSettings.ts",
     "frontend/src/index.css",
+    "frontend/src/lib/correlationAnalysis.ts",
+    "frontend/src/lib/debug.ts",
+    "frontend/src/lib/rotationBuckets.ts",
+    "frontend/src/lib/rotationMetrics.ts",
+    "frontend/src/lib/rotationPhase.ts",
+    "frontend/src/pages/Dashboard.tsx",
     "frontend/tailwind.config.js",
     "project_state.json"
   ]

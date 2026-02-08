@@ -12,13 +12,11 @@ import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-
-
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  type SignalStrength = {
+  public type SignalStrength = {
     #strongBuy;
     #buy;
     #hold;
@@ -33,7 +31,7 @@ actor {
     takeProfit : Float;
   };
 
-  type Position = {
+  public type Position = {
     id : Nat;
     portfolioId : Nat;
     userId : Principal;
@@ -46,7 +44,7 @@ actor {
     takeProfit : ?Float;
   };
 
-  type Strategy = {
+  public type Strategy = {
     id : Nat;
     userId : ?Principal;
     name : Text;
@@ -55,7 +53,7 @@ actor {
     code : Text;
   };
 
-  type Backtest = {
+  public type Backtest = {
     id : Nat;
     strategyId : Nat;
     userId : Principal;
@@ -65,7 +63,7 @@ actor {
     updatedAt : ?Time.Time;
   };
 
-  type TradeJournalEntry = {
+  public type TradeJournalEntry = {
     id : Nat;
     userId : Principal;
     positionId : Nat;
@@ -76,7 +74,7 @@ actor {
     pnl : Float;
   };
 
-  type CryptoInsight = {
+  public type CryptoInsight = {
     id : Nat;
     symbol : Text;
     price : Float;
@@ -86,7 +84,7 @@ actor {
     updatedAt : ?Time.Time;
   };
 
-  type PortfolioSummary = {
+  public type PortfolioSummary = {
     totalInvested : Float;
     totalSold : Float;
     cryptoCount : Nat;
@@ -138,7 +136,7 @@ actor {
     preferredTimeframe : ?Text;
   };
 
-  type ReadyToDumpSignal = {
+  public type ReadyToDumpSignal = {
     id : Nat;
     symbol : Text;
     timeframe : Text;
@@ -151,7 +149,7 @@ actor {
     updatedAt : ?Time.Time;
   };
 
-  type Settings = {
+  public type Settings = {
     aiForecastSensitivity : Float;
     alertThreshold : Float;
     riskTolerance : Float;
@@ -179,6 +177,73 @@ actor {
     displayUiTheme = "ugc_theme_light";
   };
 
+  public type RotationEventType = {
+    #bucketShift;
+    #divergence;
+    #trendChange;
+    #leadershipChange;
+    #marketPhaseChange;
+    #directionChange;
+  };
+
+  public type RotationEvent = {
+    id : Nat;
+    asset : Text;
+    timestamp : Time.Time;
+    eventType : RotationEventType;
+    description : Text;
+    details : Text;
+    assetClass : Text;
+  };
+
+  public type RotationAlertRule = {
+    id : Nat;
+    assetClass : Text;
+    alertType : RotationEventType;
+    threshold : Float;
+    createdAt : Time.Time;
+    updatedAt : ?Time.Time;
+  };
+
+  type AlertChannel = {
+    #inApp;
+    #email;
+    #push;
+    #webhook;
+  };
+
+  type AlertStatus = {
+    #active;
+    #triggered;
+    #disabled;
+  };
+
+  public type RotationAlert = {
+    id : Nat;
+    ruleId : Nat;
+    userId : Principal;
+    status : AlertStatus;
+    message : Text;
+    channel : AlertChannel;
+    triggerCount : Nat;
+    lastTriggered : ?Time.Time;
+    createdAt : Time.Time;
+    updatedAt : ?Time.Time;
+  };
+
+  public type RotationRadarSettings = {
+    selectedBuckets : [Text];
+    alertRules : [RotationAlertRule];
+    divergenceThreshold : Float;
+    enablePushNotifications : Bool;
+    showAllRotations : Bool;
+    longEntrySignalThreshold : Float;
+    shortEntrySignalThreshold : Float;
+    uiTheme : Text;
+    createdAt : Time.Time;
+    updatedAt : ?Time.Time;
+  };
+
   let positions = Map.empty<Nat, Position>();
   let strategies = Map.empty<Nat, Strategy>();
   let backtests = Map.empty<Nat, Backtest>();
@@ -187,6 +252,11 @@ actor {
   let userProfiles = Map.empty<Principal, UserProfile>();
   let readyToDumpSignals = Map.empty<Nat, ReadyToDumpSignal>();
   let userSettings = Map.empty<Principal, Settings>();
+  let rotationEvents = Map.empty<Nat, RotationEvent>();
+  let alertRules = Map.empty<Nat, RotationAlertRule>();
+  let rotationAlerts = Map.empty<Nat, RotationAlert>();
+  let rotationRadarSettings = Map.empty<Principal, RotationRadarSettings>();
+
   var riskReward : ?RiskReward = null;
   var portfolioSummary : ?PortfolioSummary = null;
 
@@ -244,6 +314,13 @@ actor {
           Runtime.trap("Unauthorized: Can only access your own journal entries");
         };
       };
+    };
+  };
+
+  func guardAlertRuleOwner(caller : Principal, ruleId : Nat) : () {
+    switch (alertRules.get(ruleId)) {
+      case null { Runtime.trap("Alert rule not found") };
+      case (?_) {};
     };
   };
 
@@ -326,6 +403,45 @@ actor {
     );
   };
 
+  // Rotation Radar Functions (New + Updated)
+  public shared ({ caller }) func getUserRotationRadarSettings() : async RotationRadarSettings {
+    switch (rotationRadarSettings.get(caller)) {
+      case (null) { getDefaultRotationRadarSettings() };
+      case (?settings) { settings };
+    };
+  };
+
+  public shared ({ caller }) func saveUserRotationRadarSettings(settings : RotationRadarSettings) : async () {
+    guardUser(caller);
+    rotationRadarSettings.add(
+      caller,
+      {
+        settings with
+        updatedAt = ?Time.now();
+      },
+    );
+  };
+
+  public shared ({ caller }) func resetUserRotationRadarSettings() : async () {
+    guardUser(caller);
+    rotationRadarSettings.add(caller, getDefaultRotationRadarSettings());
+  };
+
+  func getDefaultRotationRadarSettings() : RotationRadarSettings {
+    {
+      selectedBuckets = ["large caps", "medium caps"];
+      alertRules = [];
+      divergenceThreshold = 1.5;
+      enablePushNotifications = true;
+      showAllRotations = false;
+      longEntrySignalThreshold = 60.0;
+      shortEntrySignalThreshold = 40.0;
+      uiTheme = "ugc_theme_light";
+      createdAt = Time.now();
+      updatedAt = null;
+    };
+  };
+
   // User Settings Functions
   public query ({ caller }) func getUserSettings() : async Settings {
     switch (userSettings.get(caller)) {
@@ -346,6 +462,94 @@ actor {
 
   public query ({ caller }) func getDefaultSettings() : async Settings {
     defaultSettings;
+  };
+
+  // Rotation Events
+  public shared ({ caller }) func createRotationEvent(asset : Text, eventType : RotationEventType, description : Text, details : Text, assetClass : Text) : async Nat {
+    guardAdmin(caller);
+    let id = rotationEvents.size() + 1;
+    let event : RotationEvent = {
+      id;
+      asset;
+      timestamp = Time.now();
+      eventType;
+      description;
+      details;
+      assetClass;
+    };
+    rotationEvents.add(id, event);
+    id;
+  };
+
+  public shared ({ caller }) func updateRotationEvent(eventId : Nat, eventType : RotationEventType, description : Text, details : Text, assetClass : Text) : async () {
+    guardAdmin(caller);
+    switch (rotationEvents.get(eventId)) {
+      case null { Runtime.trap("Rotation event not found") };
+      case (?event) {
+        let updated : RotationEvent = {
+          id = event.id;
+          asset = event.asset;
+          timestamp = Time.now();
+          eventType = eventType;
+          description = description;
+          details = details;
+          assetClass = assetClass;
+        };
+        rotationEvents.add(eventId, updated);
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteRotationEvent(eventId : Nat) : async () {
+    guardAdmin(caller);
+    rotationEvents.remove(eventId);
+  };
+
+  public query ({ caller }) func getAllRotationEvents() : async [RotationEvent] {
+    rotationEvents.values().toArray();
+  };
+
+  // Rotation Alert Rules
+  public shared ({ caller }) func createRotationAlertRule(assetClass : Text, alertType : RotationEventType, threshold : Float) : async Nat {
+    guardUser(caller);
+    let id = alertRules.size() + 1;
+    let rule : RotationAlertRule = {
+      id;
+      assetClass;
+      alertType;
+      threshold;
+      createdAt = Time.now();
+      updatedAt = null;
+    };
+    alertRules.add(id, rule);
+    id;
+  };
+
+  public shared ({ caller }) func updateRotationAlertRule(ruleId : Nat, assetClass : Text, alertType : RotationEventType, threshold : Float) : async () {
+    guardAlertRuleOwner(caller, ruleId);
+    switch (alertRules.get(ruleId)) {
+      case null { Runtime.trap("Alert rule not found") };
+      case (?rule) {
+        let updated : RotationAlertRule = {
+          id = rule.id;
+          assetClass = assetClass;
+          alertType = alertType;
+          threshold = threshold;
+          createdAt = rule.createdAt;
+          updatedAt = ?Time.now();
+        };
+        alertRules.add(ruleId, updated);
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteRotationAlertRule(ruleId : Nat) : async () {
+    guardAlertRuleOwner(caller, ruleId);
+    alertRules.remove(ruleId);
+  };
+
+  public query ({ caller }) func getAllRotationAlertRules() : async [RotationAlertRule] {
+    alertRules.values().toArray();
   };
 
   // Position Functions (User-owned resources)

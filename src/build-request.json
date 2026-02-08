@@ -1,72 +1,219 @@
 {
   "kind": "build_request",
-  "title": "Fix transparent dropdown/select menus and polish overlay readability",
+  "title": "Build the Market Rotation Radar app (polished, stable, production-ready)",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+      "text": "Rebrand the app UI and PWA metadata to “Market Rotation Radar” across the frontend (page titles, header, dashboard hero text, descriptions) and update PWA assets/metadata accordingly (frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js cache name) so the installed app and browser tab reflect the new product.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "yes fix the dropdowns and anything else you see that could be fixed",
-          "the dropdown is transparent/see-through and it is hard to see the information"
+          "make The Market Rotation Radar. app you have full control to make it the most complete and professional version possible. Keep refining until it’s fully polished, stable, and production-ready."
         ]
       },
       "acceptanceCriteria": [
-        "Opening any dropdown/select/popover on desktop or mobile shows an opaque background (no page content visible through the panel).",
-        "Overlay panel text meets clear contrast in both light and dark mode.",
-        "Overlay panels include a visible border and shadow so edges are clearly defined on all backgrounds."
+        "Browser tab title shows “Market Rotation Radar”.",
+        "PWA manifest name/short_name/description reflect “Market Rotation Radar”.",
+        "Service worker CACHE_NAME is updated to a new name/version so existing users don’t get stale cached assets from the prior app branding.",
+        "Header and main dashboard heading no longer reference “Crypto Insights”, “Crypto Trading Dashboard”, or “Elite Swing Trading” and instead reference “Market Rotation Radar”."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+      "text": "Create a dedicated “Rotation Radar” dashboard experience focused on identifying capital rotation between BTC, ETH, majors, mid-caps, and micro-caps, using the existing market data feed, and ensure the primary navigation/tabs prioritize rotation workflows (not trade-entry/portfolio workflows).",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "the dropdown is transparent/see-through and it is hard to see the information"
+          "make The Market Rotation Radar. app you have full control to make it the most complete and professional version possible."
         ]
       },
       "acceptanceCriteria": [
-        "Tailwind/Shadcn color utilities that rely on CSS variables (e.g., background/foreground/popover/card/border) render correctly without falling back to transparent.",
-        "The fix is applied globally (no need to patch individual dropdown instances one-by-one)."
+        "The default landing view clearly presents rotation-specific insights first (phase, flows, leaders/laggards), rather than trade-entry zones or portfolio simulation.",
+        "The UI exposes clear groupings for BTC / ETH / Majors / Mid-caps / Micro-caps (or an equivalent clear segmentation) and those groupings are used consistently throughout the app.",
+        "Existing non-rotation tools that remain available do not dominate the primary landing experience."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+      "text": "Implement a Market Rotation classification layer that assigns each asset to a rotation bucket (BTC, ETH, majors, mid-caps, micro-caps) based on available inputs (e.g., market-cap rank from CoinRanking top-100 list) and computes per-bucket aggregate metrics (weighted change, volume trends, breadth/participation, momentum proxy).",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "anything else you see that could be fixed"
+          "make The Market Rotation Radar. app you have full control to make it the most complete and professional version possible."
         ]
       },
       "acceptanceCriteria": [
-        "Dropdowns/Select menus are not clipped by containers and remain usable on small mobile screens.",
-        "Menus appear above sticky elements (e.g., the header) and remain clickable/tappable."
+        "Each coin in the top-100 universe is deterministically assigned to exactly one bucket using a documented rule visible in the UI (e.g., a tooltip or info section).",
+        "A bucket summary section displays at least: bucket performance (24h), relative performance vs BTC, and a participation/breadth metric.",
+        "The bucket metrics update when the underlying market data query refreshes."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Add a “Rotation Phase” engine that infers the current market rotation phase from dominance metrics and cross-bucket relative strength (e.g., BTC dominance vs Total3, ETH dominance behavior, and bucket leadership), and present: current phase label, confidence score, and a short human-readable explanation of why the phase was chosen.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "make The Market Rotation Radar. app you have full control to make it the most complete and professional version possible."
+        ]
+      },
+      "acceptanceCriteria": [
+        "UI shows a single current phase state (label) with a confidence score and an explanation section referencing concrete metrics (dominance and/or relative strength).",
+        "Phase output is stable across refreshes (i.e., avoids rapid flipping) by applying smoothing/hysteresis rules.",
+        "If data is insufficient, the phase panel degrades gracefully with a clear “insufficient data” message and does not break the page."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Build a “Flow & Leaders” view that surfaces actionable rotation candidates: (a) leaders and laggards within each bucket, (b) coins outperforming their bucket and BTC, and (c) divergence highlights using the existing correlation analysis utilities; include filtering, sorting, and click-through to an existing coin detail dialog for drill-down.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "make The Market Rotation Radar. app you have full control to make it the most complete and professional version possible."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Users can filter the leaders list by bucket and sort by at least: 24h change, volume, relative strength vs BTC, and correlation-derived rotation signal.",
+        "Clicking any coin in leaders/laggards opens the existing coin detail dialog (or an equivalent drill-down) without console errors.",
+        "The correlation-based rotation signals are integrated into the rotation UI (not hidden only in an “Advanced” area)."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Add Rotation Alerts: allow users to configure rotation-related alert rules (phase change alerts, bucket leadership shift alerts, and top divergence/rotation-signal alerts) and deliver them via the existing notification/toast infrastructure with an in-app alert history dedicated to rotation events.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "fully polished, stable, and production-ready"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Users can enable/disable rotation alerts and adjust thresholds (e.g., minimum confidence, minimum relative strength) in a settings panel.",
+        "When an alert condition is met, the app emits a toast and records an event in alert history with timestamp, rule name, and affected bucket/coin.",
+        "Alerts respect cooldowns to prevent spamming during frequent refresh cycles."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Persist user Rotation Radar preferences (selected buckets, alert rules, thresholds, UI options) using authenticated storage, reusing the existing backend user settings pattern; ensure unauthenticated users still get a functional app with local defaults (no crashes).",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "production-ready"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When logged in, rotation preferences survive a page refresh and a new session (read from backend).",
+        "When logged out, rotation preferences fall back to sane defaults and the app remains usable without backend calls failing the UI.",
+        "Backend API includes explicit methods/fields for rotation settings (or an equivalent backward-compatible extension of existing settings), and existing settings are not lost."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Polish for production readiness: improve loading/error/empty states across rotation panels; reduce console noise (remove or gate excessive logs); validate responsiveness (mobile-first), accessibility (keyboard navigation, readable contrast), and performance (no unnecessary recomputation on each render).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "fully polished, stable, and production-ready"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All rotation panels show consistent skeleton/loading and non-blocking error states (no blank sections).",
+        "The app has no noisy repetitive console logs during normal operation (debug logs are removed or behind a clear debug flag).",
+        "Rotation computations are memoized appropriately and do not cause noticeable UI jank during refresh intervals.",
+        "Core flows are usable on mobile widths without horizontal overflow."
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Choose and apply one cohesive visual theme for Market Rotation Radar (colors, typography, spacing, card style, icon usage) distinct from the current look; avoid a blue/purple-forward palette and apply consistently across header, tabs, cards, badges, and charts.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "most complete and professional version possible"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A single consistent theme is applied across the app (no mixed/legacy styling in primary surfaces).",
+        "Theme avoids being primarily blue/purple and remains readable in both light and dark modes.",
+        "Key states (bullish/bearish/neutral, buy/sell/hold) have consistent color semantics across the rotation UI."
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Add an in-app “How to Use Rotation Radar” guide (short, skimmable) explaining buckets, phases, confidence, and how to interpret leaders/divergences; include a glossary for terms used in the UI.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "make The Market Rotation Radar. app"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A discoverable help entry exists from the main UI (e.g., in Settings or a Help button).",
+        "Guide content is in English and matches the actual UI labels and metrics used.",
+        "Glossary definitions are concise and do not claim guaranteed financial outcomes."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui (compose/override via global styles or usage-level props instead).",
-    "Do not modify immutable paths listed in SYSTEM_CONTEXT."
+    "Use English for all user-facing text.",
+    "Do not edit any files under frontend/src/components/ui or any frontend immutablePaths listed in SYSTEM_CONTEXT; compose existing UI components instead.",
+    "Backend must remain a single Motoko actor in backend/main.mo; only add backend/migration.mo if a state/schema upgrade is required.",
+    "Do not introduce external databases or third-party auth; Internet Identity only."
   ],
   "nonGoals": [
-    "No new product features beyond UI/readability fixes for dropdowns and related overlays.",
-    "No backend changes are required for this request."
+    "Implementing live trading, brokerage exchange account linking, or automated order execution.",
+    "Adding real-time communication via WebSockets or push notifications.",
+    "Integrating third-party LLM/AI services or external databases.",
+    "Providing financial advice or guaranteeing buy/sell outcomes."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [
+      "Build a standalone crypto analytics app called “Market Rotation Radar” to detect and visualize capital rotation between BTC/ETH/majors/mid-caps/micro-caps for better buy/sell timing."
+    ],
+    "goalsToRemove": [],
+    "preferencesToAdd": [
+      "All user-facing text must be English."
+    ],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

@@ -20,6 +20,14 @@ export const SignalStrength = IDL.Variant({
   'sell' : IDL.Null,
   'strongSell' : IDL.Null,
 });
+export const RotationEventType = IDL.Variant({
+  'directionChange' : IDL.Null,
+  'bucketShift' : IDL.Null,
+  'divergence' : IDL.Null,
+  'marketPhaseChange' : IDL.Null,
+  'leadershipChange' : IDL.Null,
+  'trendChange' : IDL.Null,
+});
 export const Time = IDL.Int;
 export const ReadyToDumpSignal = IDL.Record({
   'id' : IDL.Nat,
@@ -53,6 +61,23 @@ export const Position = IDL.Record({
   'stopLoss' : IDL.Opt(IDL.Float64),
   'buyPrice' : IDL.Float64,
   'quantity' : IDL.Float64,
+});
+export const RotationAlertRule = IDL.Record({
+  'id' : IDL.Nat,
+  'alertType' : RotationEventType,
+  'threshold' : IDL.Float64,
+  'createdAt' : Time,
+  'updatedAt' : IDL.Opt(Time),
+  'assetClass' : IDL.Text,
+});
+export const RotationEvent = IDL.Record({
+  'id' : IDL.Nat,
+  'asset' : IDL.Text,
+  'description' : IDL.Text,
+  'timestamp' : Time,
+  'details' : IDL.Text,
+  'assetClass' : IDL.Text,
+  'eventType' : RotationEventType,
 });
 export const Strategy = IDL.Record({
   'id' : IDL.Nat,
@@ -89,6 +114,18 @@ export const Settings = IDL.Record({
   'aiForecastSensitivity' : IDL.Float64,
   'enablePerformanceMode' : IDL.Bool,
   'enableBrowserNotifications' : IDL.Bool,
+});
+export const RotationRadarSettings = IDL.Record({
+  'showAllRotations' : IDL.Bool,
+  'createdAt' : Time,
+  'shortEntrySignalThreshold' : IDL.Float64,
+  'longEntrySignalThreshold' : IDL.Float64,
+  'selectedBuckets' : IDL.Vec(IDL.Text),
+  'divergenceThreshold' : IDL.Float64,
+  'updatedAt' : IDL.Opt(Time),
+  'uiTheme' : IDL.Text,
+  'enablePushNotifications' : IDL.Bool,
+  'alertRules' : IDL.Vec(RotationAlertRule),
 });
 export const http_header = IDL.Record({
   'value' : IDL.Text,
@@ -131,6 +168,16 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'createRotationAlertRule' : IDL.Func(
+      [IDL.Text, RotationEventType, IDL.Float64],
+      [IDL.Nat],
+      [],
+    ),
+  'createRotationEvent' : IDL.Func(
+      [IDL.Text, RotationEventType, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'createStrategy' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
@@ -144,6 +191,8 @@ export const idlService = IDL.Service({
   'deleteBacktest' : IDL.Func([IDL.Nat], [], []),
   'deletePosition' : IDL.Func([IDL.Nat], [], []),
   'deleteReadyToDumpSignal' : IDL.Func([IDL.Nat], [], []),
+  'deleteRotationAlertRule' : IDL.Func([IDL.Nat], [], []),
+  'deleteRotationEvent' : IDL.Func([IDL.Nat], [], []),
   'deleteStrategy' : IDL.Func([IDL.Nat], [], []),
   'deleteTradeJournalEntry' : IDL.Func([IDL.Nat], [], []),
   'fetchCryptoDataFromBinance' : IDL.Func([], [IDL.Text], []),
@@ -159,6 +208,12 @@ export const idlService = IDL.Service({
       [IDL.Vec(ReadyToDumpSignal)],
       ['query'],
     ),
+  'getAllRotationAlertRules' : IDL.Func(
+      [],
+      [IDL.Vec(RotationAlertRule)],
+      ['query'],
+    ),
+  'getAllRotationEvents' : IDL.Func([], [IDL.Vec(RotationEvent)], ['query']),
   'getAllStrategies' : IDL.Func([], [IDL.Vec(Strategy)], ['query']),
   'getAllTradeJournalEntries' : IDL.Func(
       [],
@@ -182,6 +237,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUserRotationRadarSettings' : IDL.Func([], [RotationRadarSettings], []),
   'getUserSettings' : IDL.Func([], [Settings], ['query']),
   'getUserStrategies' : IDL.Func([], [IDL.Vec(Strategy)], ['query']),
   'getUserTradeJournalEntries' : IDL.Func(
@@ -190,8 +246,10 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'resetUserRotationRadarSettings' : IDL.Func([], [], []),
   'resetUserSettings' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveUserRotationRadarSettings' : IDL.Func([RotationRadarSettings], [], []),
   'saveUserSettings' : IDL.Func([Settings], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
@@ -222,6 +280,16 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'updateRotationAlertRule' : IDL.Func(
+      [IDL.Nat, IDL.Text, RotationEventType, IDL.Float64],
+      [],
+      [],
+    ),
+  'updateRotationEvent' : IDL.Func(
+      [IDL.Nat, RotationEventType, IDL.Text, IDL.Text, IDL.Text],
+      [],
+      [],
+    ),
   'updateStrategy' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [],
@@ -248,6 +316,14 @@ export const idlFactory = ({ IDL }) => {
     'hold' : IDL.Null,
     'sell' : IDL.Null,
     'strongSell' : IDL.Null,
+  });
+  const RotationEventType = IDL.Variant({
+    'directionChange' : IDL.Null,
+    'bucketShift' : IDL.Null,
+    'divergence' : IDL.Null,
+    'marketPhaseChange' : IDL.Null,
+    'leadershipChange' : IDL.Null,
+    'trendChange' : IDL.Null,
   });
   const Time = IDL.Int;
   const ReadyToDumpSignal = IDL.Record({
@@ -282,6 +358,23 @@ export const idlFactory = ({ IDL }) => {
     'stopLoss' : IDL.Opt(IDL.Float64),
     'buyPrice' : IDL.Float64,
     'quantity' : IDL.Float64,
+  });
+  const RotationAlertRule = IDL.Record({
+    'id' : IDL.Nat,
+    'alertType' : RotationEventType,
+    'threshold' : IDL.Float64,
+    'createdAt' : Time,
+    'updatedAt' : IDL.Opt(Time),
+    'assetClass' : IDL.Text,
+  });
+  const RotationEvent = IDL.Record({
+    'id' : IDL.Nat,
+    'asset' : IDL.Text,
+    'description' : IDL.Text,
+    'timestamp' : Time,
+    'details' : IDL.Text,
+    'assetClass' : IDL.Text,
+    'eventType' : RotationEventType,
   });
   const Strategy = IDL.Record({
     'id' : IDL.Nat,
@@ -318,6 +411,18 @@ export const idlFactory = ({ IDL }) => {
     'aiForecastSensitivity' : IDL.Float64,
     'enablePerformanceMode' : IDL.Bool,
     'enableBrowserNotifications' : IDL.Bool,
+  });
+  const RotationRadarSettings = IDL.Record({
+    'showAllRotations' : IDL.Bool,
+    'createdAt' : Time,
+    'shortEntrySignalThreshold' : IDL.Float64,
+    'longEntrySignalThreshold' : IDL.Float64,
+    'selectedBuckets' : IDL.Vec(IDL.Text),
+    'divergenceThreshold' : IDL.Float64,
+    'updatedAt' : IDL.Opt(Time),
+    'uiTheme' : IDL.Text,
+    'enablePushNotifications' : IDL.Bool,
+    'alertRules' : IDL.Vec(RotationAlertRule),
   });
   const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
   const http_request_result = IDL.Record({
@@ -357,6 +462,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'createRotationAlertRule' : IDL.Func(
+        [IDL.Text, RotationEventType, IDL.Float64],
+        [IDL.Nat],
+        [],
+      ),
+    'createRotationEvent' : IDL.Func(
+        [IDL.Text, RotationEventType, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'createStrategy' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
@@ -370,6 +485,8 @@ export const idlFactory = ({ IDL }) => {
     'deleteBacktest' : IDL.Func([IDL.Nat], [], []),
     'deletePosition' : IDL.Func([IDL.Nat], [], []),
     'deleteReadyToDumpSignal' : IDL.Func([IDL.Nat], [], []),
+    'deleteRotationAlertRule' : IDL.Func([IDL.Nat], [], []),
+    'deleteRotationEvent' : IDL.Func([IDL.Nat], [], []),
     'deleteStrategy' : IDL.Func([IDL.Nat], [], []),
     'deleteTradeJournalEntry' : IDL.Func([IDL.Nat], [], []),
     'fetchCryptoDataFromBinance' : IDL.Func([], [IDL.Text], []),
@@ -385,6 +502,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ReadyToDumpSignal)],
         ['query'],
       ),
+    'getAllRotationAlertRules' : IDL.Func(
+        [],
+        [IDL.Vec(RotationAlertRule)],
+        ['query'],
+      ),
+    'getAllRotationEvents' : IDL.Func([], [IDL.Vec(RotationEvent)], ['query']),
     'getAllStrategies' : IDL.Func([], [IDL.Vec(Strategy)], ['query']),
     'getAllTradeJournalEntries' : IDL.Func(
         [],
@@ -408,6 +531,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUserRotationRadarSettings' : IDL.Func([], [RotationRadarSettings], []),
     'getUserSettings' : IDL.Func([], [Settings], ['query']),
     'getUserStrategies' : IDL.Func([], [IDL.Vec(Strategy)], ['query']),
     'getUserTradeJournalEntries' : IDL.Func(
@@ -416,8 +540,10 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'resetUserRotationRadarSettings' : IDL.Func([], [], []),
     'resetUserSettings' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveUserRotationRadarSettings' : IDL.Func([RotationRadarSettings], [], []),
     'saveUserSettings' : IDL.Func([Settings], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
@@ -445,6 +571,16 @@ export const idlFactory = ({ IDL }) => {
           IDL.Float64,
           IDL.Float64,
         ],
+        [],
+        [],
+      ),
+    'updateRotationAlertRule' : IDL.Func(
+        [IDL.Nat, IDL.Text, RotationEventType, IDL.Float64],
+        [],
+        [],
+      ),
+    'updateRotationEvent' : IDL.Func(
+        [IDL.Nat, RotationEventType, IDL.Text, IDL.Text, IDL.Text],
         [],
         [],
       ),

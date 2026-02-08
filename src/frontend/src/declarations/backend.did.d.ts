@@ -43,6 +43,41 @@ export interface ReadyToDumpSignal {
   'updatedAt' : [] | [Time],
   'symbol' : string,
 }
+export interface RotationAlertRule {
+  'id' : bigint,
+  'alertType' : RotationEventType,
+  'threshold' : number,
+  'createdAt' : Time,
+  'updatedAt' : [] | [Time],
+  'assetClass' : string,
+}
+export interface RotationEvent {
+  'id' : bigint,
+  'asset' : string,
+  'description' : string,
+  'timestamp' : Time,
+  'details' : string,
+  'assetClass' : string,
+  'eventType' : RotationEventType,
+}
+export type RotationEventType = { 'directionChange' : null } |
+  { 'bucketShift' : null } |
+  { 'divergence' : null } |
+  { 'marketPhaseChange' : null } |
+  { 'leadershipChange' : null } |
+  { 'trendChange' : null };
+export interface RotationRadarSettings {
+  'showAllRotations' : boolean,
+  'createdAt' : Time,
+  'shortEntrySignalThreshold' : number,
+  'longEntrySignalThreshold' : number,
+  'selectedBuckets' : Array<string>,
+  'divergenceThreshold' : number,
+  'updatedAt' : [] | [Time],
+  'uiTheme' : string,
+  'enablePushNotifications' : boolean,
+  'alertRules' : Array<RotationAlertRule>,
+}
 export interface Settings {
   'enableToastNotifications' : boolean,
   'displayUiTheme' : string,
@@ -115,6 +150,14 @@ export interface _SERVICE {
     [string, string, SignalStrength, number, number, number, number],
     bigint
   >,
+  'createRotationAlertRule' : ActorMethod<
+    [string, RotationEventType, number],
+    bigint
+  >,
+  'createRotationEvent' : ActorMethod<
+    [string, RotationEventType, string, string, string],
+    bigint
+  >,
   'createStrategy' : ActorMethod<[string, string, string, string], bigint>,
   'createTradeJournalEntry' : ActorMethod<
     [bigint, string, string, [] | [Time], number],
@@ -123,6 +166,8 @@ export interface _SERVICE {
   'deleteBacktest' : ActorMethod<[bigint], undefined>,
   'deletePosition' : ActorMethod<[bigint], undefined>,
   'deleteReadyToDumpSignal' : ActorMethod<[bigint], undefined>,
+  'deleteRotationAlertRule' : ActorMethod<[bigint], undefined>,
+  'deleteRotationEvent' : ActorMethod<[bigint], undefined>,
   'deleteStrategy' : ActorMethod<[bigint], undefined>,
   'deleteTradeJournalEntry' : ActorMethod<[bigint], undefined>,
   'fetchCryptoDataFromBinance' : ActorMethod<[], string>,
@@ -130,6 +175,8 @@ export interface _SERVICE {
   'getAllBacktests' : ActorMethod<[], Array<Backtest>>,
   'getAllPositions' : ActorMethod<[], Array<Position>>,
   'getAllReadyToDumpSignals' : ActorMethod<[], Array<ReadyToDumpSignal>>,
+  'getAllRotationAlertRules' : ActorMethod<[], Array<RotationAlertRule>>,
+  'getAllRotationEvents' : ActorMethod<[], Array<RotationEvent>>,
   'getAllStrategies' : ActorMethod<[], Array<Strategy>>,
   'getAllTradeJournalEntries' : ActorMethod<[], Array<TradeJournalEntry>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -141,12 +188,18 @@ export interface _SERVICE {
   'getUserBacktests' : ActorMethod<[], Array<Backtest>>,
   'getUserPositions' : ActorMethod<[], Array<Position>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUserRotationRadarSettings' : ActorMethod<[], RotationRadarSettings>,
   'getUserSettings' : ActorMethod<[], Settings>,
   'getUserStrategies' : ActorMethod<[], Array<Strategy>>,
   'getUserTradeJournalEntries' : ActorMethod<[], Array<TradeJournalEntry>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'resetUserRotationRadarSettings' : ActorMethod<[], undefined>,
   'resetUserSettings' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveUserRotationRadarSettings' : ActorMethod<
+    [RotationRadarSettings],
+    undefined
+  >,
   'saveUserSettings' : ActorMethod<[Settings], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateBacktest' : ActorMethod<[bigint, string, string], undefined>,
@@ -156,6 +209,14 @@ export interface _SERVICE {
   >,
   'updateReadyToDumpSignal' : ActorMethod<
     [bigint, string, SignalStrength, number, number, number, number],
+    undefined
+  >,
+  'updateRotationAlertRule' : ActorMethod<
+    [bigint, string, RotationEventType, number],
+    undefined
+  >,
+  'updateRotationEvent' : ActorMethod<
+    [bigint, RotationEventType, string, string, string],
     undefined
   >,
   'updateStrategy' : ActorMethod<

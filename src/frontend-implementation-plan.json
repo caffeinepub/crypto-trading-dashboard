@@ -1,61 +1,342 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix opaque Radix/Shadcn overlays and global theme token alignment",
+  "title": "Market Rotation Radar (frontend-only) rebrand + rotation dashboard + alerts + settings persistence + production polish",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Ensure all dropdown-style overlay panels render with an opaque surface, readable text, and defined edges in light/dark themes.",
+      "summary": "Rebrand UI text and PWA metadata/assets to “Market Rotation Radar” and bump service worker cache name to avoid stale branding.",
       "acceptanceCriteria": [
-        "Opening any dropdown/select/popover on desktop or mobile shows an opaque background (no page content visible through the panel).",
-        "Overlay panel text meets clear contrast in both light and dark mode.",
-        "Overlay panels include a visible border and shadow so edges are clearly defined on all backgrounds."
+        "Browser tab title shows “Market Rotation Radar”.",
+        "PWA manifest name/short_name/description reflect “Market Rotation Radar”.",
+        "Service worker CACHE_NAME is updated to a new name/version so existing users don’t get stale cached assets from the prior app branding.",
+        "Header and main dashboard heading no longer reference “Crypto Insights”, “Crypto Trading Dashboard”, or “Elite Swing Trading” and instead reference “Market Rotation Radar”."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Update global Radix/Shadcn overlay surface overrides to use the correct theme tokens and enforce opaque backgrounds, readable foreground colors, and clear border + shadow for overlay content elements (DropdownMenu, Select, Popover, ContextMenu, Tooltip). Use the shadcn-ui (Radix-based) overlay token conventions to keep surfaces consistent across components; verify the component's usage instructions before implementing."
+          "description": "Update document title, meta description, theme-color (if needed for the new theme), and apple-mobile-web-app-title to “Market Rotation Radar”, ensuring all user-facing text remains English."
+        },
+        {
+          "path": "frontend/public/manifest.webmanifest",
+          "operation": "modify",
+          "description": "Update manifest name/short_name/description for “Market Rotation Radar” and align theme/background colors to the new cohesive theme."
+        },
+        {
+          "path": "frontend/public/sw.js",
+          "operation": "modify",
+          "description": "Rename CACHE_NAME to a new Market Rotation Radar-specific name/version and ensure activation still clears previous caches (avoid stale cached assets)."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Replace existing app name/subtitle with “Market Rotation Radar” branding and update any legacy dashboard wording. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Dashboard.tsx",
+          "operation": "modify",
+          "description": "Update the dashboard hero heading/subheading to rotation-focused copy using “Market Rotation Radar” and remove any remaining legacy branding references. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Update ThemeProvider storageKey (currently crypto-insights-themed) and any remaining branding references so persisted theme and UI text align with “Market Rotation Radar”. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Update footer branding text to “Market Rotation Radar” where applicable while keeping content English."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Fix global CSS theme token formatting so Tailwind/Shadcn utilities resolve overlay colors correctly (no transparent fallbacks).",
+      "summary": "Create a dedicated Rotation Radar dashboard as the primary landing experience and reorganize navigation/tabs to prioritize rotation workflows.",
       "acceptanceCriteria": [
-        "Tailwind/Shadcn color utilities that rely on CSS variables (e.g., background/foreground/popover/card/border) render correctly without falling back to transparent.",
-        "The fix is applied globally (no need to patch individual dropdown instances one-by-one)."
+        "The default landing view clearly presents rotation-specific insights first (phase, flows, leaders/laggards), rather than trade-entry zones or portfolio simulation.",
+        "The UI exposes clear groupings for BTC / ETH / Majors / Mid-caps / Micro-caps (or an equivalent clear segmentation) and those groupings are used consistently throughout the app.",
+        "Existing non-rotation tools that remain available do not dominate the primary landing experience."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/pages/Dashboard.tsx",
           "operation": "modify",
-          "description": "Align the global CSS color variables to the format expected by the project Tailwind config (e.g., variables should be raw OKLCH channel values consumed by oklch(var(--token)) rather than embedding oklch(...) inside the variable). Ensure background/foreground/popover/card/border/input/ring tokens resolve to fully-opaque colors in both :root and .dark. This should globally fix shadcn-ui utility classes like bg-popover; verify the component's usage instructions before implementing."
+          "description": "Rework Tabs so the default tab is a new “Rotation Radar” experience and non-rotation tools move to secondary tabs (e.g., Tools/Legacy). Wire new rotation panels into the tab layout and preserve access to existing features without making them the landing focus. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Audit and adjust Tailwind theme color token definitions as needed so they correctly consume the revised CSS variable formats (especially overlay-related tokens like popover/card/border/ring) and support explicit alpha handling where appropriate. Keep the solution global and consistent with shadcn-ui token usage; verify the component's usage instructions before implementing."
+          "path": "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "operation": "create",
+          "description": "Create the Rotation Radar dashboard container that composes rotation panels (bucket summary, rotation phase, flow/leaders entry-point) and accepts market data + dominance metrics as inputs. Use existing shadcn-ui components (e.g., Card, Tabs, Badge, Tooltip) for consistent UI. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationBucketChips.tsx",
+          "operation": "create",
+          "description": "Create a reusable bucket segmentation control (BTC/ETH/Majors/Mid-caps/Micro-caps) used across rotation views for filtering and consistent labeling. Use existing shadcn-ui components (e.g., ToggleGroup/Buttons/Badges if present) or compose with Button/Badge. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationDataContext.tsx",
+          "operation": "create",
+          "description": "Add a small context/provider to share computed rotation classification + bucket metrics across rotation panels to avoid prop-drilling and redundant recomputation. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Polish dropdown/overlay interaction behavior (stacking, spacing, and mobile usability) to avoid clipping and ensure overlays appear above sticky UI.",
+      "summary": "Implement deterministic bucket classification and compute per-bucket aggregate rotation metrics that update with data refresh.",
       "acceptanceCriteria": [
-        "Dropdowns/Select menus are not clipped by containers and remain usable on small mobile screens.",
-        "Menus appear above sticky elements (e.g., the header) and remain clickable/tappable."
+        "Each coin in the top-100 universe is deterministically assigned to exactly one bucket using a documented rule visible in the UI (e.g., a tooltip or info section).",
+        "A bucket summary section displays at least: bucket performance (24h), relative performance vs BTC, and a participation/breadth metric.",
+        "The bucket metrics update when the underlying market data query refreshes."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/rotationBuckets.ts",
+          "operation": "create",
+          "description": "Implement deterministic rotation bucket assignment (BTC, ETH, Majors, Mid-caps, Micro-caps) using available market inputs (e.g., rank if available, otherwise market-cap ordering), returning exactly one bucket per asset and exposing a human-readable rule description for UI tooltips."
+        },
+        {
+          "path": "frontend/src/lib/rotationMetrics.ts",
+          "operation": "create",
+          "description": "Compute per-bucket aggregates: weighted 24h change, relative performance vs BTC, volume trend proxy, breadth/participation (e.g., % of coins in bucket positive), and a momentum proxy. Ensure pure functions suitable for memoization."
+        },
+        {
+          "path": "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+          "operation": "create",
+          "description": "Create the bucket summary UI panel showing required metrics per bucket and an info/tooltip describing the bucket assignment rule. Compose with existing shadcn-ui components (Card, Tooltip, Badge, Table). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "operation": "modify",
+          "description": "Wire bucket assignment + bucket metric computations into the Rotation Radar dashboard using memoization, and render BucketSummaryPanel. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add a Rotation Phase engine with confidence and explanation, including smoothing/hysteresis and graceful degradation.",
+      "acceptanceCriteria": [
+        "UI shows a single current phase state (label) with a confidence score and an explanation section referencing concrete metrics (dominance and/or relative strength).",
+        "Phase output is stable across refreshes (i.e., avoids rapid flipping) by applying smoothing/hysteresis rules.",
+        "If data is insufficient, the phase panel degrades gracefully with a clear “insufficient data” message and does not break the page."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/rotationPhase.ts",
+          "operation": "create",
+          "description": "Implement a rotation phase inference engine based on dominance metrics and cross-bucket relative strength. Include confidence scoring, explanation text referencing inputs, and hysteresis/smoothing to reduce rapid flipping when data updates frequently."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationPhasePanel.tsx",
+          "operation": "create",
+          "description": "Create a UI panel that displays phase label, confidence score, and explanation; shows an “insufficient data” empty-state when required inputs are missing. Compose with existing shadcn-ui components (Card, Badge, Alert). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "operation": "modify",
+          "description": "Integrate rotation phase computation and render RotationPhasePanel; ensure phase state is stable across refreshes (using the engine’s hysteresis) and updates when market data refreshes. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Build a Flow & Leaders view with filtering/sorting, correlation-derived rotation signals, and click-through to the existing coin detail dialog.",
+      "acceptanceCriteria": [
+        "Users can filter the leaders list by bucket and sort by at least: 24h change, volume, relative strength vs BTC, and correlation-derived rotation signal.",
+        "Clicking any coin in leaders/laggards opens the existing coin detail dialog (or an equivalent drill-down) without console errors.",
+        "The correlation-based rotation signals are integrated into the rotation UI (not hidden only in an “Advanced” area)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/rotation/FlowLeadersView.tsx",
+          "operation": "create",
+          "description": "Create the Flow & Leaders view: leaders/laggards within each bucket, outperformers vs bucket and BTC, and correlation-derived rotation signal surfacing with filters/sorts. Compose with existing shadcn-ui components (Tabs/Select/Table/Input) and reuse correlationAnalysis utilities. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Dashboard.tsx",
+          "operation": "modify",
+          "description": "Add a dedicated tab/section for “Flow & Leaders” under the rotation-first navigation, and wire row-click to open the existing CoinDetailDialog by updating selectedCoin/isDialogOpen. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "operation": "modify",
+          "description": "Add a prominent entry point to the Flow & Leaders view from the Rotation Radar landing (e.g., a button/summary card) so correlation signals are not buried in Advanced tools. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Add Rotation Alerts configuration, toast delivery, cooldowns, and a rotation-dedicated in-app alert history.",
+      "acceptanceCriteria": [
+        "Users can enable/disable rotation alerts and adjust thresholds (e.g., minimum confidence, minimum relative strength) in a settings panel.",
+        "When an alert condition is met, the app emits a toast and records an event in alert history with timestamp, rule name, and affected bucket/coin.",
+        "Alerts respect cooldowns to prevent spamming during frequent refresh cycles."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/rotationAlerts.ts",
+          "operation": "create",
+          "description": "Implement rotation alert rule evaluation (phase changes, bucket leadership shifts, divergence/rotation-signal highlights) with cooldown handling and a local rotation-alert history store. Keep logic pure where possible for testability/performance."
+        },
+        {
+          "path": "frontend/src/hooks/useRotationAlerts.ts",
+          "operation": "create",
+          "description": "Create a hook that consumes computed rotation state (phase + bucket metrics + leaders/divergences) and triggers toasts via the existing toast infrastructure while recording rotation events into rotation alert history with cooldowns. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+          "operation": "create",
+          "description": "Build a Rotation Alerts settings panel (enable/disable + thresholds + cooldown settings + rule toggles) and wire it to rotation settings persistence (local defaults when logged out). Compose with existing shadcn-ui components (Card, Switch, Slider, Select). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx",
+          "operation": "create",
+          "description": "Create an in-app history panel dedicated to rotation events (timestamp, rule name, affected bucket/coin), with basic filtering and empty-state. Compose with existing shadcn-ui components (Card, ScrollArea, Select, Badge). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Dashboard.tsx",
+          "operation": "modify",
+          "description": "Wire Rotation Alerts panels into the rotation-first navigation (e.g., a dedicated “Alerts” tab) and invoke useRotationAlerts from the rotation landing view so alerts evaluate on refresh without spamming. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Persist Rotation Radar preferences using authenticated storage when logged in, with safe local defaults when logged out.",
+      "acceptanceCriteria": [
+        "When logged in, rotation preferences survive a page refresh and a new session (read from backend).",
+        "When logged out, rotation preferences fall back to sane defaults and the app remains usable without backend calls failing the UI.",
+        "Backend API includes explicit methods/fields for rotation settings (or an equivalent backward-compatible extension of existing settings), and existing settings are not lost."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/rotationSettings.ts",
+          "operation": "create",
+          "description": "Define Rotation Radar settings defaults and local fallback persistence (e.g., localStorage) for unauthenticated users, including selected buckets, UI options, and alert thresholds/rules. Ensure all text remains English."
+        },
+        {
+          "path": "frontend/src/hooks/useRotationRadarSettings.ts",
+          "operation": "create",
+          "description": "Implement a settings hook that loads/saves rotation settings: when authenticated (actor available), use backend capabilities getUserRotationRadarSettings/saveUserRotationRadarSettings/resetUserRotationRadarSettings; when unauthenticated, use local defaults + local persistence without throwing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "operation": "modify",
+          "description": "Use useRotationRadarSettings to drive selected bucket filters and UI options; ensure settings changes update the UI immediately and persist appropriately (backend when logged in, local when logged out). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+          "operation": "modify",
+          "description": "Wire alert rules/threshold controls to useRotationRadarSettings so user changes persist across refreshes/sessions when logged in and remain functional when logged out. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Production polish: consistent loading/error/empty states, reduced console noise, improved responsiveness/accessibility, and memoized rotation computations.",
+      "acceptanceCriteria": [
+        "All rotation panels show consistent skeleton/loading and non-blocking error states (no blank sections).",
+        "The app has no noisy repetitive console logs during normal operation (debug logs are removed or behind a clear debug flag).",
+        "Rotation computations are memoized appropriately and do not cause noticeable UI jank during refresh intervals.",
+        "Core flows are usable on mobile widths without horizontal overflow."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/debug.ts",
+          "operation": "create",
+          "description": "Add a lightweight debug flag + gated logger utility (e.g., debugLog/debugWarn) to prevent noisy repetitive logs during normal operation."
+        },
+        {
+          "path": "frontend/src/lib/alertSystem.ts",
+          "operation": "modify",
+          "description": "Gate existing console logs behind the debug logger utility to reduce console noise while preserving optional diagnostics."
+        },
+        {
+          "path": "frontend/src/lib/correlationAnalysis.ts",
+          "operation": "modify",
+          "description": "Gate repetitive correlation console logs behind the debug logger utility to reduce console noise; keep outputs unchanged."
+        },
+        {
+          "path": "frontend/src/hooks/useAlertSystem.ts",
+          "operation": "modify",
+          "description": "Remove or gate console logs behind the debug logger utility and ensure effect dependencies do not cause unnecessary reruns."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "operation": "modify",
+          "description": "Add consistent loading/error/empty states for rotation panels and ensure computations are memoized (avoid recomputing classification/metrics on every render). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+          "operation": "modify",
+          "description": "Add skeleton/empty states and keyboard-accessible tooltips/controls; ensure no horizontal overflow on mobile. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/FlowLeadersView.tsx",
+          "operation": "modify",
+          "description": "Improve responsiveness (mobile-first table/list behavior), add empty-state when filters produce no results, and ensure keyboard navigation for interactive elements. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Apply one cohesive, readable theme distinct from the current look, avoiding a blue/purple-forward palette across primary surfaces and states.",
+      "acceptanceCriteria": [
+        "A single consistent theme is applied across the app (no mixed/legacy styling in primary surfaces).",
+        "Theme avoids being primarily blue/purple and remains readable in both light and dark modes.",
+        "Key states (bullish/bearish/neutral, buy/sell/hold) have consistent color semantics across the rotation UI."
       ],
       "file_operations": [
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Add global overlay interaction hardening for Radix/Shadcn popper/portal content: enforce a safe z-index above sticky header layers, ensure consistent padding/radius, and provide mobile-friendly max-height + scroll behavior for long menus/tooltips/popovers so they remain usable on small screens without being clipped. Keep changes as global style overrides (no edits under frontend/src/components/ui); verify the component's usage instructions before implementing."
+          "description": "Update global theme tokens/variables to a cohesive Market Rotation Radar palette that avoids blue/purple-forward styling, ensuring contrast/readability in light and dark modes and consistent semantic colors for bullish/bearish/neutral states."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Align Tailwind theme configuration (colors/radius/typography tokens) with the new cohesive palette and ensure consistency across cards, badges, and charts."
         },
         {
           "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Validate and, if necessary, adjust the sticky header stacking behavior so it does not incorrectly occlude Radix/Shadcn overlay content (e.g., ensure header z-index is compatible with the global overlay z-index strategy) while preserving the current sticky/backdrop styling."
+          "description": "Update header styling to match the new cohesive theme (avoid legacy gradient/palette if it is blue/purple-forward) while keeping layout responsive. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/RotationPhasePanel.tsx",
+          "operation": "modify",
+          "description": "Ensure phase/bullish-bearish-neutral semantics use consistent theme colors and remain readable in both themes. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/rotation/FlowLeadersView.tsx",
+          "operation": "modify",
+          "description": "Apply consistent badge/icon color semantics for leaders/laggards and rotation signals, aligned with the new theme. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Add an in-app “How to Use Rotation Radar” guide with glossary, accessible from the main UI.",
+      "acceptanceCriteria": [
+        "A discoverable help entry exists from the main UI (e.g., in Settings or a Help button).",
+        "Guide content is in English and matches the actual UI labels and metrics used.",
+        "Glossary definitions are concise and do not claim guaranteed financial outcomes."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/rotation/HowToUseRotationRadarDialog.tsx",
+          "operation": "create",
+          "description": "Create a skimmable help/guide dialog explaining buckets, phases, confidence, leaders/divergences, plus a concise glossary. Use existing shadcn-ui components (Dialog, Accordion, ScrollArea, Badge) for accessibility and consistent styling. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/SettingsControlCenter.tsx",
+          "operation": "modify",
+          "description": "Add a discoverable Help entry/button in Settings that opens HowToUseRotationRadarDialog and ensure the guide text matches actual Rotation Radar UI labels and avoids guaranteed financial outcomes. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Dashboard.tsx",
+          "operation": "modify",
+          "description": "Optionally add a secondary access point to the guide from the Rotation Radar landing (without adding new top-level routes), keeping it discoverable on mobile. Verify the component's usage instructions before implementing."
         }
       ]
     }

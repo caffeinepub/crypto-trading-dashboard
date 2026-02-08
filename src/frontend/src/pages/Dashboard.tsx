@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, RefreshCw, TrendingUp, AlertCircle, Menu } from 'lucide-react';
+import { Loader2, RefreshCw, Radar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { CryptoTable } from '@/components/CryptoTable';
 import { AIForecastPanel } from '@/components/AIForecastPanel';
 import { TradeEntryZonePanel } from '@/components/TradeEntryZonePanel';
@@ -27,6 +26,10 @@ import { RiskManagementPanel } from '@/components/RiskManagementPanel';
 import { PerformanceModeToggle } from '@/components/PerformanceModeToggle';
 import { TradeJournalAnalyticsPanel } from '@/components/TradeJournalAnalyticsPanel';
 import { CoinDetailDialog } from '@/components/CoinDetailDialog';
+import { RotationRadarDashboard } from '@/components/rotation/RotationRadarDashboard';
+import { RotationAlertsPanel } from '@/components/rotation/RotationAlertsPanel';
+import { RotationAlertHistoryPanel } from '@/components/rotation/RotationAlertHistoryPanel';
+import { HowToUseRotationRadarDialog } from '@/components/rotation/HowToUseRotationRadarDialog';
 import { fetchCryptoDataWithIndicators, calculateDominanceMetrics, type CryptoData } from '@/lib/coinRankingApi';
 import { 
   getActiveEntryZones, 
@@ -208,11 +211,11 @@ export function Dashboard() {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex-1 min-w-0">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
-            <span className="truncate">Elite Swing Trading</span>
+            <Radar className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
+            <span className="truncate">Market Rotation Radar</span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
-            Professional cryptocurrency market analysis with advanced trading tools
+            Track capital flows and identify rotation opportunities across crypto markets
           </p>
         </div>
         <Button
@@ -231,12 +234,16 @@ export function Dashboard() {
       <PerformanceModeToggle />
 
       {/* Main Content Tabs - Mobile Optimized */}
-      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+      <Tabs defaultValue="rotation" className="space-y-4 sm:space-y-6">
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 -mx-2 sm:mx-0 px-2 sm:px-0 py-2 border-b md:border-0">
           <TabsList className="grid w-full grid-cols-5 h-auto gap-1 bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background">
-              <span className="hidden sm:inline">Overview</span>
-              <span className="sm:hidden">Home</span>
+            <TabsTrigger value="rotation" className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background">
+              <span className="hidden sm:inline">Rotation</span>
+              <span className="sm:hidden">Radar</span>
+            </TabsTrigger>
+            <TabsTrigger value="tools" className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background">
+              <span className="hidden sm:inline">Tools</span>
+              <span className="sm:hidden">Tools</span>
             </TabsTrigger>
             <TabsTrigger value="portfolio" className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background">
               <span className="hidden sm:inline">Portfolio</span>
@@ -246,10 +253,6 @@ export function Dashboard() {
               <span className="hidden sm:inline">Analytics</span>
               <span className="sm:hidden">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="advanced" className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background">
-              <span className="hidden sm:inline">Advanced</span>
-              <span className="sm:hidden">Tools</span>
-            </TabsTrigger>
             <TabsTrigger value="settings" className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background">
               <span className="hidden sm:inline">Settings</span>
               <span className="sm:hidden">Set</span>
@@ -257,8 +260,23 @@ export function Dashboard() {
           </TabsList>
         </div>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4 sm:space-y-8 mt-4">
+        {/* Rotation Radar Tab (Primary) */}
+        <TabsContent value="rotation" className="space-y-4 sm:space-y-8 mt-4">
+          <RotationRadarDashboard
+            cryptoData={displayData || []}
+            dominanceMetrics={dominanceMetrics}
+            onCoinSelect={handleCoinSelect}
+          />
+          
+          {/* Rotation Alerts */}
+          <RotationAlertsPanel />
+          
+          {/* Rotation Alert History */}
+          <RotationAlertHistoryPanel />
+        </TabsContent>
+
+        {/* Tools Tab (Legacy Features) */}
+        <TabsContent value="tools" className="space-y-4 sm:space-y-8 mt-4">
           {/* Dominance Metrics */}
           {dominanceMetrics && <DominanceMetricsPanel metrics={dominanceMetrics} />}
 
@@ -326,25 +344,21 @@ export function Dashboard() {
           <TradeJournalAnalyticsPanel />
           <PerformanceAnalytics />
           <AlertHistoryPanel />
-        </TabsContent>
-
-        {/* Advanced Tools Tab */}
-        <TabsContent value="advanced" className="space-y-4 sm:space-y-8 mt-4">
           <WhaleTrackerPanel data={displayData || []} sparklineData={sparklineData} />
           <AIOptimizerPanel />
           <CorrelationHeatmap data={displayData || []} sparklineData={sparklineData} />
           <ProfitZonePanel data={displayData || []} sparklineData={sparklineData} />
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-4 sm:space-y-8 mt-4">
+          <SettingsControlCenter />
           <SensitivityControlPanel
             allEntryZones={entryZones}
             allExitZones={exitZones}
             onThresholdChange={handleSensitivityChange}
           />
           <AlertSettingsPanel />
-        </TabsContent>
-
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-4 sm:space-y-8 mt-4">
-          <SettingsControlCenter />
         </TabsContent>
       </Tabs>
 

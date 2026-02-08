@@ -112,7 +112,7 @@ function App() {
       defaultTheme="system" 
       enableSystem
       disableTransitionOnChange={false}
-      storageKey="crypto-insights-theme"
+      storageKey="market-rotation-radar-theme"
     >
       <AppContent />
     </ThemeProvider>

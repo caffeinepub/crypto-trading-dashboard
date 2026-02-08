@@ -13,14 +13,39 @@ export interface TransformationOutput {
     headers: Array<http_header>;
 }
 export type Time = bigint;
-export interface http_header {
-    value: string;
-    name: string;
+export interface RotationAlertRule {
+    id: bigint;
+    alertType: RotationEventType;
+    threshold: number;
+    createdAt: Time;
+    updatedAt?: Time;
+    assetClass: string;
+}
+export interface RotationRadarSettings {
+    showAllRotations: boolean;
+    createdAt: Time;
+    shortEntrySignalThreshold: number;
+    longEntrySignalThreshold: number;
+    selectedBuckets: Array<string>;
+    divergenceThreshold: number;
+    updatedAt?: Time;
+    uiTheme: string;
+    enablePushNotifications: boolean;
+    alertRules: Array<RotationAlertRule>;
 }
 export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
+}
+export interface RotationEvent {
+    id: bigint;
+    asset: string;
+    description: string;
+    timestamp: Time;
+    details: string;
+    assetClass: string;
+    eventType: RotationEventType;
 }
 export interface Settings {
     enableToastNotifications: boolean;
@@ -34,6 +59,10 @@ export interface Settings {
     aiForecastSensitivity: number;
     enablePerformanceMode: boolean;
     enableBrowserNotifications: boolean;
+}
+export interface http_header {
+    value: string;
+    name: string;
 }
 export interface Position {
     id: bigint;
@@ -78,6 +107,11 @@ export interface Strategy {
     description: string;
     performance: string;
 }
+export interface UserProfile {
+    riskTolerance?: number;
+    preferredTimeframe?: string;
+    name: string;
+}
 export interface ReadyToDumpSignal {
     id: bigint;
     stopLossZone: number;
@@ -90,10 +124,13 @@ export interface ReadyToDumpSignal {
     updatedAt?: Time;
     symbol: string;
 }
-export interface UserProfile {
-    riskTolerance?: number;
-    preferredTimeframe?: string;
-    name: string;
+export enum RotationEventType {
+    directionChange = "directionChange",
+    bucketShift = "bucketShift",
+    divergence = "divergence",
+    marketPhaseChange = "marketPhaseChange",
+    leadershipChange = "leadershipChange",
+    trendChange = "trendChange"
 }
 export enum SignalStrength {
     buy = "buy",
@@ -112,11 +149,15 @@ export interface backendInterface {
     createBacktest(strategyId: bigint, performance: string, results: string): Promise<bigint>;
     createPosition(portfolioId: bigint, asset: string, buyPrice: number, quantity: number, signalStrength: SignalStrength): Promise<bigint>;
     createReadyToDumpSignal(symbol: string, timeframe: string, signalStrength: SignalStrength, confidenceScore: number, entryZone: number, takeProfitZone: number, stopLossZone: number): Promise<bigint>;
+    createRotationAlertRule(assetClass: string, alertType: RotationEventType, threshold: number): Promise<bigint>;
+    createRotationEvent(asset: string, eventType: RotationEventType, description: string, details: string, assetClass: string): Promise<bigint>;
     createStrategy(name: string, description: string, performance: string, code: string): Promise<bigint>;
     createTradeJournalEntry(positionId: bigint, outcome: string, notes: string, exitTime: Time | null, pnl: number): Promise<bigint>;
     deleteBacktest(backtestId: bigint): Promise<void>;
     deletePosition(positionId: bigint): Promise<void>;
     deleteReadyToDumpSignal(signalId: bigint): Promise<void>;
+    deleteRotationAlertRule(ruleId: bigint): Promise<void>;
+    deleteRotationEvent(eventId: bigint): Promise<void>;
     deleteStrategy(strategyId: bigint): Promise<void>;
     deleteTradeJournalEntry(entryId: bigint): Promise<void>;
     fetchCryptoDataFromBinance(): Promise<string>;
@@ -124,6 +165,8 @@ export interface backendInterface {
     getAllBacktests(): Promise<Array<Backtest>>;
     getAllPositions(): Promise<Array<Position>>;
     getAllReadyToDumpSignals(): Promise<Array<ReadyToDumpSignal>>;
+    getAllRotationAlertRules(): Promise<Array<RotationAlertRule>>;
+    getAllRotationEvents(): Promise<Array<RotationEvent>>;
     getAllStrategies(): Promise<Array<Strategy>>;
     getAllTradeJournalEntries(): Promise<Array<TradeJournalEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -135,17 +178,22 @@ export interface backendInterface {
     getUserBacktests(): Promise<Array<Backtest>>;
     getUserPositions(): Promise<Array<Position>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserRotationRadarSettings(): Promise<RotationRadarSettings>;
     getUserSettings(): Promise<Settings>;
     getUserStrategies(): Promise<Array<Strategy>>;
     getUserTradeJournalEntries(): Promise<Array<TradeJournalEntry>>;
     isCallerAdmin(): Promise<boolean>;
+    resetUserRotationRadarSettings(): Promise<void>;
     resetUserSettings(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveUserRotationRadarSettings(settings: RotationRadarSettings): Promise<void>;
     saveUserSettings(settings: Settings): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateBacktest(backtestId: bigint, performance: string, results: string): Promise<void>;
     updatePosition(positionId: bigint, sellPrice: number | null, stopLoss: number | null, takeProfit: number | null): Promise<void>;
     updateReadyToDumpSignal(signalId: bigint, timeframe: string, signalStrength: SignalStrength, confidenceScore: number, entryZone: number, takeProfitZone: number, stopLossZone: number): Promise<void>;
+    updateRotationAlertRule(ruleId: bigint, assetClass: string, alertType: RotationEventType, threshold: number): Promise<void>;
+    updateRotationEvent(eventId: bigint, eventType: RotationEventType, description: string, details: string, assetClass: string): Promise<void>;
     updateStrategy(strategyId: bigint, name: string, description: string, performance: string, code: string): Promise<void>;
     updateTradeJournalEntry(entryId: bigint, outcome: string, notes: string, exitTime: Time | null, pnl: number): Promise<void>;
 }

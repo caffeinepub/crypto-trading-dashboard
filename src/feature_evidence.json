@@ -2,10 +2,16 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-all-dropdown-style-overlay-surfaces-dropdownmenu-select-popover-contextmenu-tooltip-so-the-opened-panel-is-never-transparent-see-through-and-the-menu-text-is-readable-in-both-light-and-dark-themes",
-      "featureTitle": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+      "featureId": "feature-rebrand-the-app-ui-and-pwa-metadata-to-market-rotation-radar-across-the-frontend-page-titles-header-dashboard-hero-text-descriptions-and-update-pwa-assets-metadata-accordingly-frontend-index-html-frontend-public-manifest-webmanifest-frontend-public-sw-js-cache-name-so-the-installed-app-and-browser-tab-reflect-the-new-product",
+      "featureTitle": "Rebrand the app UI and PWA metadata to “Market Rotation Radar” across the frontend (page titles, header, dashboard hero text, descriptions) and update PWA assets/metadata accordingly (frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js cache name) so the installed app and browser tab reflect the new product.",
       "files": [
-        "frontend/src/index.css"
+        "frontend/index.html",
+        "frontend/public/manifest.webmanifest",
+        "frontend/public/sw.js",
+        "frontend/src/App.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "components": [
         "http-outcalls@3.0.0",
@@ -22,11 +28,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-resolve-the-theme-token-mismatch-causing-overlay-backgrounds-to-render-incorrectly-by-aligning-the-global-css-color-variables-with-the-format-expected-by-shadcn-radix-tailwind-utilities-so-classes-like-bg-popover-produce-correct-opaque-backgrounds",
-      "featureTitle": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+      "featureId": "feature-create-a-dedicated-rotation-radar-dashboard-experience-focused-on-identifying-capital-rotation-between-btc-eth-majors-mid-caps-and-micro-caps-using-the-existing-market-data-feed-and-ensure-the-primary-navigation-tabs-prioritize-rotation-workflows-not-trade-entry-portfolio-workflows",
+      "featureTitle": "Create a dedicated “Rotation Radar” dashboard experience focused on identifying capital rotation between BTC, ETH, majors, mid-caps, and micro-caps, using the existing market data feed, and ensure the primary navigation/tabs prioritize rotation workflows (not trade-entry/portfolio workflows).",
       "files": [
-        "frontend/src/index.css",
-        "frontend/tailwind.config.js"
+        "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "components": [
         "http-outcalls@3.0.0",
@@ -43,11 +49,13 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-do-a-quick-ui-pass-on-the-dropdown-related-interactions-and-fix-any-obvious-issues-discovered-during-the-audit-e-g-overlay-z-index-stacking-so-menus-appear-above-sticky-headers-consistent-padding-radius-and-no-clipping-on-small-screens",
-      "featureTitle": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+      "featureId": "feature-implement-a-market-rotation-classification-layer-that-assigns-each-asset-to-a-rotation-bucket-btc-eth-majors-mid-caps-micro-caps-based-on-available-inputs-e-g-market-cap-rank-from-coinranking-top-100-list-and-computes-per-bucket-aggregate-metrics-weighted-change-volume-trends-breadth-participation-momentum-proxy",
+      "featureTitle": "Implement a Market Rotation classification layer that assigns each asset to a rotation bucket (BTC, ETH, majors, mid-caps, micro-caps) based on available inputs (e.g., market-cap rank from CoinRanking top-100 list) and computes per-bucket aggregate metrics (weighted change, volume trends, breadth/participation, momentum proxy).",
       "files": [
-        "frontend/src/components/Header.tsx",
-        "frontend/src/index.css"
+        "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+        "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+        "frontend/src/lib/rotationBuckets.ts",
+        "frontend/src/lib/rotationMetrics.ts"
       ],
       "components": [
         "http-outcalls@3.0.0",
@@ -60,6 +68,164 @@
       ],
       "testIds": [
         "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-rotation-phase-engine-that-infers-the-current-market-rotation-phase-from-dominance-metrics-and-cross-bucket-relative-strength-e-g-btc-dominance-vs-total3-eth-dominance-behavior-and-bucket-leadership-and-present-current-phase-label-confidence-score-and-a-short-human-readable-explanation-of-why-the-phase-was-chosen",
+      "featureTitle": "Add a “Rotation Phase” engine that infers the current market rotation phase from dominance metrics and cross-bucket relative strength (e.g., BTC dominance vs Total3, ETH dominance behavior, and bucket leadership), and present: current phase label, confidence score, and a short human-readable explanation of why the phase was chosen.",
+      "files": [
+        "frontend/src/components/rotation/RotationPhasePanel.tsx",
+        "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+        "frontend/src/lib/rotationPhase.ts"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-flow-leaders-view-that-surfaces-actionable-rotation-candidates-a-leaders-and-laggards-within-each-bucket-b-coins-outperforming-their-bucket-and-btc-and-c-divergence-highlights-using-the-existing-correlation-analysis-utilities-include-filtering-sorting-and-click-through-to-an-existing-coin-detail-dialog-for-drill-down",
+      "featureTitle": "Build a “Flow & Leaders” view that surfaces actionable rotation candidates: (a) leaders and laggards within each bucket, (b) coins outperforming their bucket and BTC, and (c) divergence highlights using the existing correlation analysis utilities; include filtering, sorting, and click-through to an existing coin detail dialog for drill-down.",
+      "files": [
+        "frontend/src/components/rotation/FlowLeadersView.tsx",
+        "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+        "frontend/src/pages/Dashboard.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-rotation-alerts-allow-users-to-configure-rotation-related-alert-rules-phase-change-alerts-bucket-leadership-shift-alerts-and-top-divergence-rotation-signal-alerts-and-deliver-them-via-the-existing-notification-toast-infrastructure-with-an-in-app-alert-history-dedicated-to-rotation-events",
+      "featureTitle": "Add Rotation Alerts: allow users to configure rotation-related alert rules (phase change alerts, bucket leadership shift alerts, and top divergence/rotation-signal alerts) and deliver them via the existing notification/toast infrastructure with an in-app alert history dedicated to rotation events.",
+      "files": [
+        "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx",
+        "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+        "frontend/src/pages/Dashboard.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-persist-user-rotation-radar-preferences-selected-buckets-alert-rules-thresholds-ui-options-using-authenticated-storage-reusing-the-existing-backend-user-settings-pattern-ensure-unauthenticated-users-still-get-a-functional-app-with-local-defaults-no-crashes",
+      "featureTitle": "Persist user Rotation Radar preferences (selected buckets, alert rules, thresholds, UI options) using authenticated storage, reusing the existing backend user settings pattern; ensure unauthenticated users still get a functional app with local defaults (no crashes).",
+      "files": [
+        "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+        "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+        "frontend/src/hooks/useRotationRadarSettings.ts"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-polish-for-production-readiness-improve-loading-error-empty-states-across-rotation-panels-reduce-console-noise-remove-or-gate-excessive-logs-validate-responsiveness-mobile-first-accessibility-keyboard-navigation-readable-contrast-and-performance-no-unnecessary-recomputation-on-each-render",
+      "featureTitle": "Polish for production readiness: improve loading/error/empty states across rotation panels; reduce console noise (remove or gate excessive logs); validate responsiveness (mobile-first), accessibility (keyboard navigation, readable contrast), and performance (no unnecessary recomputation on each render).",
+      "files": [
+        "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+        "frontend/src/components/rotation/FlowLeadersView.tsx",
+        "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+        "frontend/src/lib/correlationAnalysis.ts",
+        "frontend/src/lib/debug.ts"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-choose-and-apply-one-cohesive-visual-theme-for-market-rotation-radar-colors-typography-spacing-card-style-icon-usage-distinct-from-the-current-look-avoid-a-blue-purple-forward-palette-and-apply-consistently-across-header-tabs-cards-badges-and-charts",
+      "featureTitle": "Choose and apply one cohesive visual theme for Market Rotation Radar (colors, typography, spacing, card style, icon usage) distinct from the current look; avoid a blue/purple-forward palette and apply consistently across header, tabs, cards, badges, and charts.",
+      "files": [
+        "frontend/src/components/Header.tsx",
+        "frontend/src/components/rotation/FlowLeadersView.tsx",
+        "frontend/src/components/rotation/RotationPhasePanel.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-in-app-how-to-use-rotation-radar-guide-short-skimmable-explaining-buckets-phases-confidence-and-how-to-interpret-leaders-divergences-include-a-glossary-for-terms-used-in-the-ui",
+      "featureTitle": "Add an in-app “How to Use Rotation Radar” guide (short, skimmable) explaining buckets, phases, confidence, and how to interpret leaders/divergences; include a glossary for terms used in the UI.",
+      "files": [
+        "frontend/src/components/SettingsControlCenter.tsx",
+        "frontend/src/components/rotation/HowToUseRotationRadarDialog.tsx",
+        "frontend/src/pages/Dashboard.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-10"
       ],
       "confidence": "high"
     }

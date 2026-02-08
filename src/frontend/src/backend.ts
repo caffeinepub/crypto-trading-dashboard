@@ -95,14 +95,39 @@ export interface TransformationOutput {
     headers: Array<http_header>;
 }
 export type Time = bigint;
-export interface http_header {
-    value: string;
-    name: string;
+export interface RotationAlertRule {
+    id: bigint;
+    alertType: RotationEventType;
+    threshold: number;
+    createdAt: Time;
+    updatedAt?: Time;
+    assetClass: string;
+}
+export interface RotationRadarSettings {
+    showAllRotations: boolean;
+    createdAt: Time;
+    shortEntrySignalThreshold: number;
+    longEntrySignalThreshold: number;
+    selectedBuckets: Array<string>;
+    divergenceThreshold: number;
+    updatedAt?: Time;
+    uiTheme: string;
+    enablePushNotifications: boolean;
+    alertRules: Array<RotationAlertRule>;
 }
 export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
+}
+export interface RotationEvent {
+    id: bigint;
+    asset: string;
+    description: string;
+    timestamp: Time;
+    details: string;
+    assetClass: string;
+    eventType: RotationEventType;
 }
 export interface Settings {
     enableToastNotifications: boolean;
@@ -116,6 +141,10 @@ export interface Settings {
     aiForecastSensitivity: number;
     enablePerformanceMode: boolean;
     enableBrowserNotifications: boolean;
+}
+export interface http_header {
+    value: string;
+    name: string;
 }
 export interface Position {
     id: bigint;
@@ -160,6 +189,11 @@ export interface Strategy {
     description: string;
     performance: string;
 }
+export interface UserProfile {
+    riskTolerance?: number;
+    preferredTimeframe?: string;
+    name: string;
+}
 export interface ReadyToDumpSignal {
     id: bigint;
     stopLossZone: number;
@@ -172,10 +206,13 @@ export interface ReadyToDumpSignal {
     updatedAt?: Time;
     symbol: string;
 }
-export interface UserProfile {
-    riskTolerance?: number;
-    preferredTimeframe?: string;
-    name: string;
+export enum RotationEventType {
+    directionChange = "directionChange",
+    bucketShift = "bucketShift",
+    divergence = "divergence",
+    marketPhaseChange = "marketPhaseChange",
+    leadershipChange = "leadershipChange",
+    trendChange = "trendChange"
 }
 export enum SignalStrength {
     buy = "buy",
@@ -195,11 +232,15 @@ export interface backendInterface {
     createBacktest(strategyId: bigint, performance: string, results: string): Promise<bigint>;
     createPosition(portfolioId: bigint, asset: string, buyPrice: number, quantity: number, signalStrength: SignalStrength): Promise<bigint>;
     createReadyToDumpSignal(symbol: string, timeframe: string, signalStrength: SignalStrength, confidenceScore: number, entryZone: number, takeProfitZone: number, stopLossZone: number): Promise<bigint>;
+    createRotationAlertRule(assetClass: string, alertType: RotationEventType, threshold: number): Promise<bigint>;
+    createRotationEvent(asset: string, eventType: RotationEventType, description: string, details: string, assetClass: string): Promise<bigint>;
     createStrategy(name: string, description: string, performance: string, code: string): Promise<bigint>;
     createTradeJournalEntry(positionId: bigint, outcome: string, notes: string, exitTime: Time | null, pnl: number): Promise<bigint>;
     deleteBacktest(backtestId: bigint): Promise<void>;
     deletePosition(positionId: bigint): Promise<void>;
     deleteReadyToDumpSignal(signalId: bigint): Promise<void>;
+    deleteRotationAlertRule(ruleId: bigint): Promise<void>;
+    deleteRotationEvent(eventId: bigint): Promise<void>;
     deleteStrategy(strategyId: bigint): Promise<void>;
     deleteTradeJournalEntry(entryId: bigint): Promise<void>;
     fetchCryptoDataFromBinance(): Promise<string>;
@@ -207,6 +248,8 @@ export interface backendInterface {
     getAllBacktests(): Promise<Array<Backtest>>;
     getAllPositions(): Promise<Array<Position>>;
     getAllReadyToDumpSignals(): Promise<Array<ReadyToDumpSignal>>;
+    getAllRotationAlertRules(): Promise<Array<RotationAlertRule>>;
+    getAllRotationEvents(): Promise<Array<RotationEvent>>;
     getAllStrategies(): Promise<Array<Strategy>>;
     getAllTradeJournalEntries(): Promise<Array<TradeJournalEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -218,21 +261,26 @@ export interface backendInterface {
     getUserBacktests(): Promise<Array<Backtest>>;
     getUserPositions(): Promise<Array<Position>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserRotationRadarSettings(): Promise<RotationRadarSettings>;
     getUserSettings(): Promise<Settings>;
     getUserStrategies(): Promise<Array<Strategy>>;
     getUserTradeJournalEntries(): Promise<Array<TradeJournalEntry>>;
     isCallerAdmin(): Promise<boolean>;
+    resetUserRotationRadarSettings(): Promise<void>;
     resetUserSettings(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveUserRotationRadarSettings(settings: RotationRadarSettings): Promise<void>;
     saveUserSettings(settings: Settings): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateBacktest(backtestId: bigint, performance: string, results: string): Promise<void>;
     updatePosition(positionId: bigint, sellPrice: number | null, stopLoss: number | null, takeProfit: number | null): Promise<void>;
     updateReadyToDumpSignal(signalId: bigint, timeframe: string, signalStrength: SignalStrength, confidenceScore: number, entryZone: number, takeProfitZone: number, stopLossZone: number): Promise<void>;
+    updateRotationAlertRule(ruleId: bigint, assetClass: string, alertType: RotationEventType, threshold: number): Promise<void>;
+    updateRotationEvent(eventId: bigint, eventType: RotationEventType, description: string, details: string, assetClass: string): Promise<void>;
     updateStrategy(strategyId: bigint, name: string, description: string, performance: string, code: string): Promise<void>;
     updateTradeJournalEntry(entryId: bigint, outcome: string, notes: string, exitTime: Time | null, pnl: number): Promise<void>;
 }
-import type { Backtest as _Backtest, Position as _Position, ReadyToDumpSignal as _ReadyToDumpSignal, SignalStrength as _SignalStrength, Strategy as _Strategy, Time as _Time, TradeJournalEntry as _TradeJournalEntry, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Backtest as _Backtest, Position as _Position, ReadyToDumpSignal as _ReadyToDumpSignal, RotationAlertRule as _RotationAlertRule, RotationEvent as _RotationEvent, RotationEventType as _RotationEventType, RotationRadarSettings as _RotationRadarSettings, SignalStrength as _SignalStrength, Strategy as _Strategy, Time as _Time, TradeJournalEntry as _TradeJournalEntry, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -305,6 +353,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async createRotationAlertRule(arg0: string, arg1: RotationEventType, arg2: number): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createRotationAlertRule(arg0, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg1), arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createRotationAlertRule(arg0, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg1), arg2);
+            return result;
+        }
+    }
+    async createRotationEvent(arg0: string, arg1: RotationEventType, arg2: string, arg3: string, arg4: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createRotationEvent(arg0, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createRotationEvent(arg0, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4);
+            return result;
+        }
+    }
     async createStrategy(arg0: string, arg1: string, arg2: string, arg3: string): Promise<bigint> {
         if (this.processError) {
             try {
@@ -322,14 +398,14 @@ export class Backend implements backendInterface {
     async createTradeJournalEntry(arg0: bigint, arg1: string, arg2: string, arg3: Time | null, arg4: number): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.createTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg3), arg4);
+                const result = await this.actor.createTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg3), arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg3), arg4);
+            const result = await this.actor.createTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg3), arg4);
             return result;
         }
     }
@@ -372,6 +448,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteReadyToDumpSignal(arg0);
+            return result;
+        }
+    }
+    async deleteRotationAlertRule(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteRotationAlertRule(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteRotationAlertRule(arg0);
+            return result;
+        }
+    }
+    async deleteRotationEvent(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteRotationEvent(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteRotationEvent(arg0);
             return result;
         }
     }
@@ -421,112 +525,140 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getActiveReadyToDumpSignals();
-                return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getActiveReadyToDumpSignals();
-            return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllBacktests(): Promise<Array<Backtest>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllBacktests();
-                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllBacktests();
-            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllPositions(): Promise<Array<Position>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllPositions();
-                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllPositions();
-            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllReadyToDumpSignals(): Promise<Array<ReadyToDumpSignal>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllReadyToDumpSignals();
-                return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllReadyToDumpSignals();
-            return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllRotationAlertRules(): Promise<Array<RotationAlertRule>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllRotationAlertRules();
+                return from_candid_vec_n21(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllRotationAlertRules();
+            return from_candid_vec_n21(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllRotationEvents(): Promise<Array<RotationEvent>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllRotationEvents();
+                return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllRotationEvents();
+            return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllStrategies(): Promise<Array<Strategy>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllStrategies();
-                return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllStrategies();
-            return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllTradeJournalEntries(): Promise<Array<TradeJournalEntry>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllTradeJournalEntries();
-                return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllTradeJournalEntries();
-            return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n36(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n36(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n30(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n40(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n30(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n40(this._uploadFile, this._downloadFile, result);
         }
     }
     async getDefaultSettings(): Promise<Settings> {
@@ -547,84 +679,98 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPositionsByPortfolio(arg0);
-                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPositionsByPortfolio(arg0);
-            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
         }
     }
     async getStrategy(arg0: bigint): Promise<Strategy | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getStrategy(arg0);
-                return from_candid_opt_n32(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n42(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStrategy(arg0);
-            return from_candid_opt_n32(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n42(this._uploadFile, this._downloadFile, result);
         }
     }
     async getStrategyCode(arg0: bigint): Promise<string | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getStrategyCode(arg0);
-                return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n39(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStrategyCode(arg0);
-            return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n39(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserBacktests(): Promise<Array<Backtest>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserBacktests();
-                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserBacktests();
-            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserPositions(): Promise<Array<Position>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserPositions();
-                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserPositions();
-            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n36(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n36(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserRotationRadarSettings(): Promise<RotationRadarSettings> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserRotationRadarSettings();
+                return from_candid_RotationRadarSettings_n43(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserRotationRadarSettings();
+            return from_candid_RotationRadarSettings_n43(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserSettings(): Promise<Settings> {
@@ -645,28 +791,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserStrategies();
-                return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserStrategies();
-            return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserTradeJournalEntries(): Promise<Array<TradeJournalEntry>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserTradeJournalEntries();
-                return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserTradeJournalEntries();
-            return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -680,6 +826,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async resetUserRotationRadarSettings(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.resetUserRotationRadarSettings();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.resetUserRotationRadarSettings();
             return result;
         }
     }
@@ -700,14 +860,28 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n33(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n45(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n33(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n45(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async saveUserRotationRadarSettings(arg0: RotationRadarSettings): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveUserRotationRadarSettings(to_candid_RotationRadarSettings_n47(this._uploadFile, this._downloadFile, arg0));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveUserRotationRadarSettings(to_candid_RotationRadarSettings_n47(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -756,14 +930,14 @@ export class Backend implements backendInterface {
     async updatePosition(arg0: bigint, arg1: number | null, arg2: number | null, arg3: number | null): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updatePosition(arg0, to_candid_opt_n35(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n35(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n35(this._uploadFile, this._downloadFile, arg3));
+                const result = await this.actor.updatePosition(arg0, to_candid_opt_n52(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n52(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n52(this._uploadFile, this._downloadFile, arg3));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updatePosition(arg0, to_candid_opt_n35(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n35(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n35(this._uploadFile, this._downloadFile, arg3));
+            const result = await this.actor.updatePosition(arg0, to_candid_opt_n52(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n52(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n52(this._uploadFile, this._downloadFile, arg3));
             return result;
         }
     }
@@ -778,6 +952,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateReadyToDumpSignal(arg0, arg1, to_candid_SignalStrength_n3(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
+    async updateRotationAlertRule(arg0: bigint, arg1: string, arg2: RotationEventType, arg3: number): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateRotationAlertRule(arg0, arg1, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg2), arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateRotationAlertRule(arg0, arg1, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg2), arg3);
+            return result;
+        }
+    }
+    async updateRotationEvent(arg0: bigint, arg1: RotationEventType, arg2: string, arg3: string, arg4: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateRotationEvent(arg0, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateRotationEvent(arg0, to_candid_RotationEventType_n5(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4);
             return result;
         }
     }
@@ -798,193 +1000,73 @@ export class Backend implements backendInterface {
     async updateTradeJournalEntry(arg0: bigint, arg1: string, arg2: string, arg3: Time | null, arg4: number): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg3), arg4);
+                const result = await this.actor.updateTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg3), arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg3), arg4);
+            const result = await this.actor.updateTradeJournalEntry(arg0, arg1, arg2, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg3), arg4);
             return result;
         }
     }
 }
-function from_candid_Backtest_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Backtest): Backtest {
-    return from_candid_record_n14(_uploadFile, _downloadFile, value);
+function from_candid_Backtest_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Backtest): Backtest {
+    return from_candid_record_n16(_uploadFile, _downloadFile, value);
 }
-function from_candid_Position_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Position): Position {
-    return from_candid_record_n17(_uploadFile, _downloadFile, value);
+function from_candid_Position_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Position): Position {
+    return from_candid_record_n19(_uploadFile, _downloadFile, value);
 }
-function from_candid_ReadyToDumpSignal_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ReadyToDumpSignal): ReadyToDumpSignal {
-    return from_candid_record_n8(_uploadFile, _downloadFile, value);
+function from_candid_ReadyToDumpSignal_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ReadyToDumpSignal): ReadyToDumpSignal {
+    return from_candid_record_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_SignalStrength_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SignalStrength): SignalStrength {
-    return from_candid_variant_n10(_uploadFile, _downloadFile, value);
+function from_candid_RotationAlertRule_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RotationAlertRule): RotationAlertRule {
+    return from_candid_record_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_Strategy_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Strategy): Strategy {
-    return from_candid_record_n21(_uploadFile, _downloadFile, value);
+function from_candid_RotationEventType_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RotationEventType): RotationEventType {
+    return from_candid_variant_n25(_uploadFile, _downloadFile, value);
 }
-function from_candid_TradeJournalEntry_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TradeJournalEntry): TradeJournalEntry {
-    return from_candid_record_n25(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserProfile_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
+function from_candid_RotationEvent_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RotationEvent): RotationEvent {
     return from_candid_record_n28(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n31(_uploadFile, _downloadFile, value);
+function from_candid_RotationRadarSettings_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RotationRadarSettings): RotationRadarSettings {
+    return from_candid_record_n44(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Time]): Time | null {
+function from_candid_SignalStrength_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SignalStrength): SignalStrength {
+    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
+}
+function from_candid_Strategy_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Strategy): Strategy {
+    return from_candid_record_n31(_uploadFile, _downloadFile, value);
+}
+function from_candid_TradeJournalEntry_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TradeJournalEntry): TradeJournalEntry {
+    return from_candid_record_n35(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserProfile_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
+    return from_candid_record_n38(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n41(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Time]): Time | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [number]): number | null {
+function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [number]): number | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
+function from_candid_opt_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
-    return value.length === 0 ? null : from_candid_UserProfile_n27(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : from_candid_UserProfile_n37(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Strategy]): Strategy | null {
-    return value.length === 0 ? null : from_candid_Strategy_n20(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Strategy]): Strategy | null {
+    return value.length === 0 ? null : from_candid_Strategy_n30(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: bigint;
-    userId: Principal;
-    createdAt: _Time;
-    results: string;
-    updatedAt: [] | [_Time];
-    performance: string;
-    strategyId: bigint;
-}): {
-    id: bigint;
-    userId: Principal;
-    createdAt: Time;
-    results: string;
-    updatedAt?: Time;
-    performance: string;
-    strategyId: bigint;
-} {
-    return {
-        id: value.id,
-        userId: value.userId,
-        createdAt: value.createdAt,
-        results: value.results,
-        updatedAt: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.updatedAt)),
-        performance: value.performance,
-        strategyId: value.strategyId
-    };
-}
-function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: bigint;
-    portfolioId: bigint;
-    signalStrength: _SignalStrength;
-    asset: string;
-    userId: Principal;
-    takeProfit: [] | [number];
-    sellPrice: [] | [number];
-    stopLoss: [] | [number];
-    buyPrice: number;
-    quantity: number;
-}): {
-    id: bigint;
-    portfolioId: bigint;
-    signalStrength: SignalStrength;
-    asset: string;
-    userId: Principal;
-    takeProfit?: number;
-    sellPrice?: number;
-    stopLoss?: number;
-    buyPrice: number;
-    quantity: number;
-} {
-    return {
-        id: value.id,
-        portfolioId: value.portfolioId,
-        signalStrength: from_candid_SignalStrength_n9(_uploadFile, _downloadFile, value.signalStrength),
-        asset: value.asset,
-        userId: value.userId,
-        takeProfit: record_opt_to_undefined(from_candid_opt_n18(_uploadFile, _downloadFile, value.takeProfit)),
-        sellPrice: record_opt_to_undefined(from_candid_opt_n18(_uploadFile, _downloadFile, value.sellPrice)),
-        stopLoss: record_opt_to_undefined(from_candid_opt_n18(_uploadFile, _downloadFile, value.stopLoss)),
-        buyPrice: value.buyPrice,
-        quantity: value.quantity
-    };
-}
-function from_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: bigint;
-    code: string;
-    userId: [] | [Principal];
-    name: string;
-    description: string;
-    performance: string;
-}): {
-    id: bigint;
-    code: string;
-    userId?: Principal;
-    name: string;
-    description: string;
-    performance: string;
-} {
-    return {
-        id: value.id,
-        code: value.code,
-        userId: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.userId)),
-        name: value.name,
-        description: value.description,
-        performance: value.performance
-    };
-}
-function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: bigint;
-    pnl: number;
-    exitTime: [] | [_Time];
-    entryTime: _Time;
-    userId: Principal;
-    positionId: bigint;
-    notes: string;
-    outcome: string;
-}): {
-    id: bigint;
-    pnl: number;
-    exitTime?: Time;
-    entryTime: Time;
-    userId: Principal;
-    positionId: bigint;
-    notes: string;
-    outcome: string;
-} {
-    return {
-        id: value.id,
-        pnl: value.pnl,
-        exitTime: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.exitTime)),
-        entryTime: value.entryTime,
-        userId: value.userId,
-        positionId: value.positionId,
-        notes: value.notes,
-        outcome: value.outcome
-    };
-}
-function from_candid_record_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    riskTolerance: [] | [number];
-    preferredTimeframe: [] | [string];
-    name: string;
-}): {
-    riskTolerance?: number;
-    preferredTimeframe?: string;
-    name: string;
-} {
-    return {
-        riskTolerance: record_opt_to_undefined(from_candid_opt_n18(_uploadFile, _downloadFile, value.riskTolerance)),
-        preferredTimeframe: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.preferredTimeframe)),
-        name: value.name
-    };
-}
-function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
     stopLossZone: number;
     entryZone: number;
@@ -1011,16 +1093,235 @@ function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
         id: value.id,
         stopLossZone: value.stopLossZone,
         entryZone: value.entryZone,
-        signalStrength: from_candid_SignalStrength_n9(_uploadFile, _downloadFile, value.signalStrength),
+        signalStrength: from_candid_SignalStrength_n11(_uploadFile, _downloadFile, value.signalStrength),
         timeframe: value.timeframe,
         createdAt: value.createdAt,
         takeProfitZone: value.takeProfitZone,
         confidenceScore: value.confidenceScore,
-        updatedAt: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.updatedAt)),
+        updatedAt: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.updatedAt)),
         symbol: value.symbol
     };
 }
-function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    userId: Principal;
+    createdAt: _Time;
+    results: string;
+    updatedAt: [] | [_Time];
+    performance: string;
+    strategyId: bigint;
+}): {
+    id: bigint;
+    userId: Principal;
+    createdAt: Time;
+    results: string;
+    updatedAt?: Time;
+    performance: string;
+    strategyId: bigint;
+} {
+    return {
+        id: value.id,
+        userId: value.userId,
+        createdAt: value.createdAt,
+        results: value.results,
+        updatedAt: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.updatedAt)),
+        performance: value.performance,
+        strategyId: value.strategyId
+    };
+}
+function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    portfolioId: bigint;
+    signalStrength: _SignalStrength;
+    asset: string;
+    userId: Principal;
+    takeProfit: [] | [number];
+    sellPrice: [] | [number];
+    stopLoss: [] | [number];
+    buyPrice: number;
+    quantity: number;
+}): {
+    id: bigint;
+    portfolioId: bigint;
+    signalStrength: SignalStrength;
+    asset: string;
+    userId: Principal;
+    takeProfit?: number;
+    sellPrice?: number;
+    stopLoss?: number;
+    buyPrice: number;
+    quantity: number;
+} {
+    return {
+        id: value.id,
+        portfolioId: value.portfolioId,
+        signalStrength: from_candid_SignalStrength_n11(_uploadFile, _downloadFile, value.signalStrength),
+        asset: value.asset,
+        userId: value.userId,
+        takeProfit: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.takeProfit)),
+        sellPrice: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.sellPrice)),
+        stopLoss: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.stopLoss)),
+        buyPrice: value.buyPrice,
+        quantity: value.quantity
+    };
+}
+function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    alertType: _RotationEventType;
+    threshold: number;
+    createdAt: _Time;
+    updatedAt: [] | [_Time];
+    assetClass: string;
+}): {
+    id: bigint;
+    alertType: RotationEventType;
+    threshold: number;
+    createdAt: Time;
+    updatedAt?: Time;
+    assetClass: string;
+} {
+    return {
+        id: value.id,
+        alertType: from_candid_RotationEventType_n24(_uploadFile, _downloadFile, value.alertType),
+        threshold: value.threshold,
+        createdAt: value.createdAt,
+        updatedAt: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.updatedAt)),
+        assetClass: value.assetClass
+    };
+}
+function from_candid_record_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    asset: string;
+    description: string;
+    timestamp: _Time;
+    details: string;
+    assetClass: string;
+    eventType: _RotationEventType;
+}): {
+    id: bigint;
+    asset: string;
+    description: string;
+    timestamp: Time;
+    details: string;
+    assetClass: string;
+    eventType: RotationEventType;
+} {
+    return {
+        id: value.id,
+        asset: value.asset,
+        description: value.description,
+        timestamp: value.timestamp,
+        details: value.details,
+        assetClass: value.assetClass,
+        eventType: from_candid_RotationEventType_n24(_uploadFile, _downloadFile, value.eventType)
+    };
+}
+function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    code: string;
+    userId: [] | [Principal];
+    name: string;
+    description: string;
+    performance: string;
+}): {
+    id: bigint;
+    code: string;
+    userId?: Principal;
+    name: string;
+    description: string;
+    performance: string;
+} {
+    return {
+        id: value.id,
+        code: value.code,
+        userId: record_opt_to_undefined(from_candid_opt_n32(_uploadFile, _downloadFile, value.userId)),
+        name: value.name,
+        description: value.description,
+        performance: value.performance
+    };
+}
+function from_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    pnl: number;
+    exitTime: [] | [_Time];
+    entryTime: _Time;
+    userId: Principal;
+    positionId: bigint;
+    notes: string;
+    outcome: string;
+}): {
+    id: bigint;
+    pnl: number;
+    exitTime?: Time;
+    entryTime: Time;
+    userId: Principal;
+    positionId: bigint;
+    notes: string;
+    outcome: string;
+} {
+    return {
+        id: value.id,
+        pnl: value.pnl,
+        exitTime: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.exitTime)),
+        entryTime: value.entryTime,
+        userId: value.userId,
+        positionId: value.positionId,
+        notes: value.notes,
+        outcome: value.outcome
+    };
+}
+function from_candid_record_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    riskTolerance: [] | [number];
+    preferredTimeframe: [] | [string];
+    name: string;
+}): {
+    riskTolerance?: number;
+    preferredTimeframe?: string;
+    name: string;
+} {
+    return {
+        riskTolerance: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.riskTolerance)),
+        preferredTimeframe: record_opt_to_undefined(from_candid_opt_n39(_uploadFile, _downloadFile, value.preferredTimeframe)),
+        name: value.name
+    };
+}
+function from_candid_record_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    showAllRotations: boolean;
+    createdAt: _Time;
+    shortEntrySignalThreshold: number;
+    longEntrySignalThreshold: number;
+    selectedBuckets: Array<string>;
+    divergenceThreshold: number;
+    updatedAt: [] | [_Time];
+    uiTheme: string;
+    enablePushNotifications: boolean;
+    alertRules: Array<_RotationAlertRule>;
+}): {
+    showAllRotations: boolean;
+    createdAt: Time;
+    shortEntrySignalThreshold: number;
+    longEntrySignalThreshold: number;
+    selectedBuckets: Array<string>;
+    divergenceThreshold: number;
+    updatedAt?: Time;
+    uiTheme: string;
+    enablePushNotifications: boolean;
+    alertRules: Array<RotationAlertRule>;
+} {
+    return {
+        showAllRotations: value.showAllRotations,
+        createdAt: value.createdAt,
+        shortEntrySignalThreshold: value.shortEntrySignalThreshold,
+        longEntrySignalThreshold: value.longEntrySignalThreshold,
+        selectedBuckets: value.selectedBuckets,
+        divergenceThreshold: value.divergenceThreshold,
+        updatedAt: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.updatedAt)),
+        uiTheme: value.uiTheme,
+        enablePushNotifications: value.enablePushNotifications,
+        alertRules: from_candid_vec_n21(_uploadFile, _downloadFile, value.alertRules)
+    };
+}
+function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     buy: null;
 } | {
     strongBuy: null;
@@ -1033,7 +1334,22 @@ function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): SignalStrength {
     return "buy" in value ? SignalStrength.buy : "strongBuy" in value ? SignalStrength.strongBuy : "hold" in value ? SignalStrength.hold : "sell" in value ? SignalStrength.sell : "strongSell" in value ? SignalStrength.strongSell : value;
 }
-function from_candid_variant_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    directionChange: null;
+} | {
+    bucketShift: null;
+} | {
+    divergence: null;
+} | {
+    marketPhaseChange: null;
+} | {
+    leadershipChange: null;
+} | {
+    trendChange: null;
+}): RotationEventType {
+    return "directionChange" in value ? RotationEventType.directionChange : "bucketShift" in value ? RotationEventType.bucketShift : "divergence" in value ? RotationEventType.divergence : "marketPhaseChange" in value ? RotationEventType.marketPhaseChange : "leadershipChange" in value ? RotationEventType.leadershipChange : "trendChange" in value ? RotationEventType.trendChange : value;
+}
+function from_candid_variant_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -1042,37 +1358,52 @@ function from_candid_variant_n31(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Backtest>): Array<Backtest> {
-    return value.map((x)=>from_candid_Backtest_n13(_uploadFile, _downloadFile, x));
+function from_candid_vec_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Backtest>): Array<Backtest> {
+    return value.map((x)=>from_candid_Backtest_n15(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Position>): Array<Position> {
-    return value.map((x)=>from_candid_Position_n16(_uploadFile, _downloadFile, x));
+function from_candid_vec_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Position>): Array<Position> {
+    return value.map((x)=>from_candid_Position_n18(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Strategy>): Array<Strategy> {
-    return value.map((x)=>from_candid_Strategy_n20(_uploadFile, _downloadFile, x));
+function from_candid_vec_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_RotationAlertRule>): Array<RotationAlertRule> {
+    return value.map((x)=>from_candid_RotationAlertRule_n22(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_TradeJournalEntry>): Array<TradeJournalEntry> {
-    return value.map((x)=>from_candid_TradeJournalEntry_n24(_uploadFile, _downloadFile, x));
+function from_candid_vec_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_RotationEvent>): Array<RotationEvent> {
+    return value.map((x)=>from_candid_RotationEvent_n27(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ReadyToDumpSignal>): Array<ReadyToDumpSignal> {
-    return value.map((x)=>from_candid_ReadyToDumpSignal_n7(_uploadFile, _downloadFile, x));
+function from_candid_vec_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Strategy>): Array<Strategy> {
+    return value.map((x)=>from_candid_Strategy_n30(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_TradeJournalEntry>): Array<TradeJournalEntry> {
+    return value.map((x)=>from_candid_TradeJournalEntry_n34(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ReadyToDumpSignal>): Array<ReadyToDumpSignal> {
+    return value.map((x)=>from_candid_ReadyToDumpSignal_n9(_uploadFile, _downloadFile, x));
+}
+function to_candid_RotationAlertRule_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: RotationAlertRule): _RotationAlertRule {
+    return to_candid_record_n51(_uploadFile, _downloadFile, value);
+}
+function to_candid_RotationEventType_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: RotationEventType): _RotationEventType {
+    return to_candid_variant_n6(_uploadFile, _downloadFile, value);
+}
+function to_candid_RotationRadarSettings_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: RotationRadarSettings): _RotationRadarSettings {
+    return to_candid_record_n48(_uploadFile, _downloadFile, value);
 }
 function to_candid_SignalStrength_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SignalStrength): _SignalStrength {
     return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n34(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n46(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_opt_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: number | null): [] | [number] {
+function to_candid_opt_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: number | null): [] | [number] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Time | null): [] | [_Time] {
+function to_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Time | null): [] | [_Time] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n46(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     riskTolerance?: number;
     preferredTimeframe?: string;
     name: string;
@@ -1085,6 +1416,66 @@ function to_candid_record_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         riskTolerance: value.riskTolerance ? candid_some(value.riskTolerance) : candid_none(),
         preferredTimeframe: value.preferredTimeframe ? candid_some(value.preferredTimeframe) : candid_none(),
         name: value.name
+    };
+}
+function to_candid_record_n48(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    showAllRotations: boolean;
+    createdAt: Time;
+    shortEntrySignalThreshold: number;
+    longEntrySignalThreshold: number;
+    selectedBuckets: Array<string>;
+    divergenceThreshold: number;
+    updatedAt?: Time;
+    uiTheme: string;
+    enablePushNotifications: boolean;
+    alertRules: Array<RotationAlertRule>;
+}): {
+    showAllRotations: boolean;
+    createdAt: _Time;
+    shortEntrySignalThreshold: number;
+    longEntrySignalThreshold: number;
+    selectedBuckets: Array<string>;
+    divergenceThreshold: number;
+    updatedAt: [] | [_Time];
+    uiTheme: string;
+    enablePushNotifications: boolean;
+    alertRules: Array<_RotationAlertRule>;
+} {
+    return {
+        showAllRotations: value.showAllRotations,
+        createdAt: value.createdAt,
+        shortEntrySignalThreshold: value.shortEntrySignalThreshold,
+        longEntrySignalThreshold: value.longEntrySignalThreshold,
+        selectedBuckets: value.selectedBuckets,
+        divergenceThreshold: value.divergenceThreshold,
+        updatedAt: value.updatedAt ? candid_some(value.updatedAt) : candid_none(),
+        uiTheme: value.uiTheme,
+        enablePushNotifications: value.enablePushNotifications,
+        alertRules: to_candid_vec_n49(_uploadFile, _downloadFile, value.alertRules)
+    };
+}
+function to_candid_record_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    alertType: RotationEventType;
+    threshold: number;
+    createdAt: Time;
+    updatedAt?: Time;
+    assetClass: string;
+}): {
+    id: bigint;
+    alertType: _RotationEventType;
+    threshold: number;
+    createdAt: _Time;
+    updatedAt: [] | [_Time];
+    assetClass: string;
+} {
+    return {
+        id: value.id,
+        alertType: to_candid_RotationEventType_n5(_uploadFile, _downloadFile, value.alertType),
+        threshold: value.threshold,
+        createdAt: value.createdAt,
+        updatedAt: value.updatedAt ? candid_some(value.updatedAt) : candid_none(),
+        assetClass: value.assetClass
     };
 }
 function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
@@ -1124,6 +1515,36 @@ function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     } : value == SignalStrength.strongSell ? {
         strongSell: null
     } : value;
+}
+function to_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: RotationEventType): {
+    directionChange: null;
+} | {
+    bucketShift: null;
+} | {
+    divergence: null;
+} | {
+    marketPhaseChange: null;
+} | {
+    leadershipChange: null;
+} | {
+    trendChange: null;
+} {
+    return value == RotationEventType.directionChange ? {
+        directionChange: null
+    } : value == RotationEventType.bucketShift ? {
+        bucketShift: null
+    } : value == RotationEventType.divergence ? {
+        divergence: null
+    } : value == RotationEventType.marketPhaseChange ? {
+        marketPhaseChange: null
+    } : value == RotationEventType.leadershipChange ? {
+        leadershipChange: null
+    } : value == RotationEventType.trendChange ? {
+        trendChange: null
+    } : value;
+}
+function to_candid_vec_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<RotationAlertRule>): Array<_RotationAlertRule> {
+    return value.map((x)=>to_candid_RotationAlertRule_n50(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

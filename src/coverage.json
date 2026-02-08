@@ -1,62 +1,224 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-04T20:45:33.737Z",
+  "generatedAt": "2026-02-08T03:57:58.734Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 3,
+    "total": 10,
+    "implemented": 10,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix all dropdown-style overlay surfaces (DropdownMenu, Select, Popover, ContextMenu, Tooltip) so the opened panel is never transparent/see-through and the menu text is readable in both light and dark themes.",
+        "summary": "Rebrand the app UI and PWA metadata to “Market Rotation Radar” across the frontend (page titles, header, dashboard hero text, descriptions) and update PWA assets/metadata accordingly (frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js cache name) so the installed app and browser tab reflect the new product.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/index.css"
+          "frontend/index.html",
+          "frontend/public/manifest.webmanifest",
+          "frontend/public/sw.js",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/Footer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/index.css"
+          "frontend/index.html",
+          "frontend/public/manifest.webmanifest",
+          "frontend/public/sw.js",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/Footer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-10",
+        "summary": "Add an in-app “How to Use Rotation Radar” guide (short, skimmable) explaining buckets, phases, confidence, and how to interpret leaders/divergences; include a glossary for terms used in the UI.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/rotation/HowToUseRotationRadarDialog.tsx",
+          "frontend/src/components/SettingsControlCenter.tsx",
+          "frontend/src/pages/Dashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/rotation/HowToUseRotationRadarDialog.tsx",
+          "frontend/src/components/SettingsControlCenter.tsx",
+          "frontend/src/pages/Dashboard.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Resolve the theme-token mismatch causing overlay backgrounds to render incorrectly by aligning the global CSS color variables with the format expected by Shadcn/Radix Tailwind utilities (so classes like bg-popover produce correct, opaque backgrounds).",
+        "summary": "Create a dedicated “Rotation Radar” dashboard experience focused on identifying capital rotation between BTC, ETH, majors, mid-caps, and micro-caps, using the existing market data feed, and ensure the primary navigation/tabs prioritize rotation workflows (not trade-entry/portfolio workflows).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js"
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "frontend/src/components/rotation/RotationBucketChips.tsx",
+          "frontend/src/components/rotation/RotationDataContext.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js"
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Do a quick UI pass on the dropdown-related interactions and fix any obvious issues discovered during the audit (e.g., overlay z-index/stacking so menus appear above sticky headers, consistent padding/radius, and no clipping on small screens).",
+        "summary": "Implement a Market Rotation classification layer that assigns each asset to a rotation bucket (BTC, ETH, majors, mid-caps, micro-caps) based on available inputs (e.g., market-cap rank from CoinRanking top-100 list) and computes per-bucket aggregate metrics (weighted change, volume trends, breadth/participation, momentum proxy).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/rotationBuckets.ts",
+          "frontend/src/lib/rotationMetrics.ts",
+          "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/rotationBuckets.ts",
+          "frontend/src/lib/rotationMetrics.ts",
+          "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add a “Rotation Phase” engine that infers the current market rotation phase from dominance metrics and cross-bucket relative strength (e.g., BTC dominance vs Total3, ETH dominance behavior, and bucket leadership), and present: current phase label, confidence score, and a short human-readable explanation of why the phase was chosen.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/rotationPhase.ts",
+          "frontend/src/components/rotation/RotationPhasePanel.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/rotationPhase.ts",
+          "frontend/src/components/rotation/RotationPhasePanel.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Build a “Flow & Leaders” view that surfaces actionable rotation candidates: (a) leaders and laggards within each bucket, (b) coins outperforming their bucket and BTC, and (c) divergence highlights using the existing correlation analysis utilities; include filtering, sorting, and click-through to an existing coin detail dialog for drill-down.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/rotation/FlowLeadersView.tsx",
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/rotation/FlowLeadersView.tsx",
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Add Rotation Alerts: allow users to configure rotation-related alert rules (phase change alerts, bucket leadership shift alerts, and top divergence/rotation-signal alerts) and deliver them via the existing notification/toast infrastructure with an in-app alert history dedicated to rotation events.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/rotationAlerts.ts",
+          "frontend/src/hooks/useRotationAlerts.ts",
+          "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+          "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx",
+          "frontend/src/pages/Dashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+          "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx",
+          "frontend/src/pages/Dashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Persist user Rotation Radar preferences (selected buckets, alert rules, thresholds, UI options) using authenticated storage, reusing the existing backend user settings pattern; ensure unauthenticated users still get a functional app with local defaults (no crashes).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/rotationSettings.ts",
+          "frontend/src/hooks/useRotationRadarSettings.ts",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "frontend/src/components/rotation/RotationAlertsPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useRotationRadarSettings.ts",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "frontend/src/components/rotation/RotationAlertsPanel.tsx"
+        ]
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Polish for production readiness: improve loading/error/empty states across rotation panels; reduce console noise (remove or gate excessive logs); validate responsiveness (mobile-first), accessibility (keyboard navigation, readable contrast), and performance (no unnecessary recomputation on each render).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/debug.ts",
+          "frontend/src/lib/alertSystem.ts",
+          "frontend/src/lib/correlationAnalysis.ts",
+          "frontend/src/hooks/useAlertSystem.ts",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+          "frontend/src/components/rotation/FlowLeadersView.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/debug.ts",
+          "frontend/src/lib/correlationAnalysis.ts",
+          "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+          "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+          "frontend/src/components/rotation/FlowLeadersView.tsx"
+        ]
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Choose and apply one cohesive visual theme for Market Rotation Radar (colors, typography, spacing, card style, icon usage) distinct from the current look; avoid a blue/purple-forward palette and apply consistently across header, tabs, cards, badges, and charts.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/index.css",
-          "frontend/src/components/Header.tsx"
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/rotation/RotationPhasePanel.tsx",
+          "frontend/src/components/rotation/FlowLeadersView.tsx"
         ],
         "matchedFiles": [
           "frontend/src/index.css",
-          "frontend/src/components/Header.tsx"
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/rotation/RotationPhasePanel.tsx",
+          "frontend/src/components/rotation/FlowLeadersView.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/index.html",
+    "frontend/public/manifest.webmanifest",
+    "frontend/public/sw.js",
+    "frontend/src/App.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
+    "frontend/src/components/LoginButton.tsx",
+    "frontend/src/components/SettingsControlCenter.tsx",
+    "frontend/src/components/rotation/BucketSummaryPanel.tsx",
+    "frontend/src/components/rotation/FlowLeadersView.tsx",
+    "frontend/src/components/rotation/HowToUseRotationRadarDialog.tsx",
+    "frontend/src/components/rotation/RotationAlertHistoryPanel.tsx",
+    "frontend/src/components/rotation/RotationAlertsPanel.tsx",
+    "frontend/src/components/rotation/RotationPhasePanel.tsx",
+    "frontend/src/components/rotation/RotationRadarDashboard.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useRotationRadarSettings.ts",
     "frontend/src/index.css",
+    "frontend/src/lib/correlationAnalysis.ts",
+    "frontend/src/lib/debug.ts",
+    "frontend/src/lib/rotationBuckets.ts",
+    "frontend/src/lib/rotationMetrics.ts",
+    "frontend/src/lib/rotationPhase.ts",
+    "frontend/src/pages/Dashboard.tsx",
     "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
